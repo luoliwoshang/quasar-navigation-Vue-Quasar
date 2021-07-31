@@ -1,157 +1,188 @@
 <template>
-  <q-card
-    :style="{
-      width: '400px',
-      background: 'linear-gradient(to top, #accbee 0%, #e7f0fd 100%)',
-    }"
-    class="q-ml-lg q-mr-lg q-mt-lg"
-  >
-    <q-item>
-      <q-card-section class="q-pb-none">
-        <q-btn
-          flat
-          round
-          size="lg"
-          style="color: #ff0080"
-          icon="local_shipping"
-        />
-      </q-card-section>
-      <q-card-section class="q-mt-md q-pt-none q-pa-none">
-        <div>
-          <div class="text-h5 text-bold text-purple-5">快递查询</div>
-          <div class="text-subtitle2 text-cyan">By Luoliwoshang</div>
+  <div>
+    <q-dialog position="left" v-model="show_search">
+      <div>
+        <q-card
+          :style="{
+            width: '400px',
+            background: 'linear-gradient(to top, #accbee 0%, #e7f0fd 100%)',
+          }"
+          class="q-ml-lg q-mr-lg q-mt-lg"
+        >
+          <form @submit.prevent.stop="onSubmit" class="q-gutter-md">
+            <q-item>
+              <q-card-section class="q-pb-none">
+                <q-btn
+                  flat
+                  round
+                  size="lg"
+                  style="color: #ff0080"
+                  icon="local_shipping"
+                />
+              </q-card-section>
+              <q-card-section class="q-mt-md q-pt-none q-pa-none">
+                <div>
+                  <div class="text-h5 text-bold text-purple-5">快递查询</div>
+                  <div class="text-subtitle2 text-cyan">By Luoliwoshang</div>
+                </div>
+              </q-card-section>
+            </q-item>
+            <q-card-section class="q-pt-xs">
+              <q-input
+                ref="order"
+                :rules="rule.order"
+                color="purple-12"
+                v-model="order_num"
+                label="运单号"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="pin" />
+                </template>
+              </q-input>
+              <q-select
+                ref="carrier"
+                :rules="rule.carrier"
+                v-model="current_carrier"
+                label="快递公司"
+                :options="carriers"
+                @filter="filterFn"
+                :option-label="(item) => item.name_cn"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="business" />
+                </template>
+                <template v-slot:no-option>
+                  <q-item>
+                    <q-item-section class="text-grey">
+                      No results
+                    </q-item-section>
+                  </q-item>
+                </template>
+              </q-select>
+            </q-card-section>
+            <q-card-actions>
+              <q-btn
+                type="submit"
+                push
+                color="deep-purple-3"
+                label="查询"
+                class="full-width"
+                size="lg"
+              />
+            </q-card-actions>
+          </form>
+        </q-card>
+      </div>
+    </q-dialog>
+    <q-dialog position="right" v-model="show_timeline">
+      <q-card>
+        <div v-for="(item, index) in express_data" :key="index" class="q-ma-lg">
+          <q-timeline  color="secondary">
+            <q-timeline-entry heading> 快递信息 </q-timeline-entry>
+            <q-timeline-entry
+              v-for="(info, idx) in item.origin_info.trackinfo"
+              :key="idx"
+              :title="info.checkpoint_date"
+              :subtitle="info.checkpoint_delivery_status"
+            >
+              <div>
+                {{ info.tracking_detail }}
+              </div>
+            </q-timeline-entry>
+          </q-timeline>
         </div>
-      </q-card-section>
-    </q-item>
-    <q-card-section class="q-pt-xs">
-      <q-input color="purple-12" v-model="运单号" label="运单号">
-        <template v-slot:prepend>
-          <q-icon name="pin" />
-        </template>
-      </q-input>
-      <q-select
-        filled
-        v-model="此_物流商"
-        use-chips
-        :options="物流商"
-        label="物流商"
-        @filter="获取_全_物流商;"
-      >
-        <template v-slot:no-option>
-          <q-item>
-            <q-item-section class="text-grey"> No results </q-item-section>
-          </q-item>
-        </template>
-      </q-select>
-      <q-select
-        filled
-        v-model="此_物流商"
-        use-chips
-        label="Lazy load opts"
-        :options="物流商"
-        @filter="filterFn"
-        @filter-abort="abortFilterFn"
-        style="width: 250px"
-      >
-        <template v-slot:no-option>
-          <q-item>
-            <q-item-section class="text-grey"> No results </q-item-section>
-          </q-item>
-        </template>
-      </q-select>
-    </q-card-section>
-  </q-card>
+      </q-card>
+    </q-dialog>
+  </div>
 </template>
 <script>
-import 物流 from "@/api/post";
-const stringOptions = ["Google", "Facebook", "Twitter", "Apple", "Oracle"];
+import Express from "@/api/express";
+
 export default {
   name: "Express",
   data() {
     return {
-      model: null,
-      options: null,
-      运单号: "",
-      此_物流商: null,
-      物流商: null,
-      常用_物流商: ["顺丰", "中通", "菜鸟"],
+      show_search: false, //是否显示组件
+      show_timeline:false,//是否显示时间线
+      order_num: "SF1315425317258",
+      current_carrier: null,
+      carriers: null, //物流商选项组
+      common_carriers: ["顺丰", "中通", "菜鸟"],
+      rule: {
+        order: [(val) => (val && val.length > 0) || "请输入运单号"],
+        carrier: [() => this.current_carrier || "请选择快递公司"],
+      },
+      express_data: [], //所有运输信息
     };
   },
   methods: {
     filterFn(val, update, abort) {
-      if (this.物流商 !== null) {
+      console.log(this);
+      if (this.carriers !== null) {
         // already loaded
         update();
         return;
       }
-
-      update(() => {
-        物流.获取_物流商信息()
-          .then((返回值) => {
-            this.物流商 = 返回值.data.filter((单_物流商) => {
-              let 是否_常用 = false;
-              this.常用_物流商.forEach((物流商_名) => {
-                单_物流商.name_cn;
-                if (单_物流商.name_cn.indexOf(物流商_名) >= 0) {
-                  是否_常用 = true;
-                }
-              });
-              console.log(是否_常用);
-              return 是否_常用;
-            });
-          })
-          .finally(() => {
-            console.log(this.物流商);
-          });
-        // console.log('开始获取')
-        // this.物流商 = this.全_物流商;
+      Express.getCarriers().then((res) => {
+        let list = [];
+        res.data.forEach((e) => {
+          let name_cn = e.name_cn;
+          if (name_cn) {
+            for (let i in this.common_carriers) {
+              if (name_cn.indexOf(this.common_carriers[i]) >= 0) {
+                list.push(e);
+              }
+            }
+          }
+        });
+        update(() => {
+          this.carriers = list;
+        });
       });
     },
-
-    abortFilterFn() {
-      // console.log('delayed filter aborted')
-    },
-    获取_全_物流商(val, update, abort) {
-      if (this.物流商 !== null) {
-        // already loaded
-        update();
-        return;
-      }
-
-      setTimeout(() => {
-        update(() => {
-          物流.获取_物流商信息()
-            .then((返回值) => {
-              console.log(1);
-              this.物流商 = this.返回值.data;
-            })
-            .finally(() => {
-              console.log("获取结束");
-            });
-          // console.log('开始获取')
-          // this.物流商 = this.全_物流商;
+    // 开始查询添加 添加入待查询 并开始查询
+    getExpressInfo() {
+      Express.createTrack([
+        {
+          tracking_number: this.order_num,
+          courier_code: this.current_carrier.code,
+        },
+      ]).then(() => {
+        Express.getInfo({
+          tracking_number: this.order_num,
+          courier_code: this.current_carrier.code,
+        }).then((res) => {
+          console.log(res);
+          this.express_data = res.data;
+          this.show_timeline = true;
         });
-      }, 2000);
+      });
+    },
+    onSubmit() {
+      this.$refs.carrier.validate();
+      this.$refs.order.validate();
+      if (this.$refs.carrier.hasError || this.$refs.order.hasError) {
+        this.formHasError = true;
+        this.$q.notify({
+          type: "warning",
+          message: `请输入快递公司以及快递单号`,
+          position: "top",
+          closeBtn: "我了解了",
+        });
+      } else {
+        this.$q.notify({
+          icon: "done",
+          color: "positive",
+          message: "获取成功",
+        });
+        this.getExpressInfo();
+      }
     },
   },
   mounted() {
-    // 物流.获取_物流商信息().then((返回值) => {
-    //   console.log(返回值);
-    // });
-    // Post.createTrack([
-    //   {
-    //     tracking_number: "SF1315425317258",
-    //     courier_code: "sf-express"
-    //   }
-    // ]).then(res=>{
-    //   console.log(res)
-    // })
-    // Post.getInfo({
-    //   tracking_number: "SF1315425317258",
-    //   courier_code: "sf-express",
-    // }).then((res) => {
-    //   console.log(res);
-    // });
+    this.bus.$on("show_express", () => {
+      this.show_search = true;
+    });
   },
 };
 </script>

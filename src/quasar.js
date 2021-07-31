@@ -5,14 +5,17 @@ import '@quasar/extras/material-icons/material-icons.css'
 import {
 	Quasar,
 	Dialog,
-	LocalStorage
+	LocalStorage,
+	Notify
 } from 'quasar'
 
 Vue.use(Quasar, {
 	config: {},
 	plugins: {
 		Dialog,
-		LocalStorage
+		LocalStorage,
+		Notify
+
 	},
 	extras: [
 		'material-icons'

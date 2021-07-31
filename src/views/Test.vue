@@ -9,29 +9,29 @@
 </template>
 
 <script>
-import vuedraggable from "vuedraggable";
-import axios from "axios";
-import Post from "../api/post";
-export default {
-  name: "HelloWorld",
-  components: { vuedraggable },
-  props: {},
-  data() {
-    return {
-      list: [1, 2, 3, 4, 5, 6],
-    };
-  },
-  updated() {
-    console.log(this.list);
-  },
-  mounted() {
+// import vuedraggable from "vuedraggable";
+// import axios from "axios";
+// import Post from "../api/express";
+// export default {
+//   name: "HelloWorld",
+//   components: { vuedraggable },
+//   props: {},
+//   data() {
+//     return {
+//       list: [1, 2, 3, 4, 5, 6],
+//     };
+//   },
+//   updated() {
+//     console.log(this.list);
+//   },
+//   mounted() {
 
-  },
-  methods: {},
-};
+//   },
+//   methods: {},
+// };
 </script>
 <style scoped>
-.transition-group {
+/* .transition-group {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
@@ -44,5 +44,5 @@ export default {
   color: #ffffff;
   border: 1px solid black;
   margin: 20px 0;
-}
+} */
 </style>
