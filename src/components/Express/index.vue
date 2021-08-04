@@ -77,7 +77,7 @@
     <q-dialog position="right" v-model="show_timeline">
       <q-card>
         <div v-for="(item, index) in express_data" :key="index" class="q-ma-lg">
-          <q-timeline  color="secondary">
+          <q-timeline color="secondary">
             <q-timeline-entry heading> 快递信息 </q-timeline-entry>
             <q-timeline-entry
               v-for="(info, idx) in item.origin_info.trackinfo"
@@ -97,23 +97,28 @@
 </template>
 <script>
 import Express from "@/api/express";
+import { mapState } from "vuex";
 
 export default {
   name: "Express",
   data() {
     return {
       show_search: false, //是否显示组件
-      show_timeline:false,//是否显示时间线
+      show_timeline: false, //是否显示时间线
       order_num: "SF1315425317258",
       current_carrier: null,
       carriers: null, //物流商选项组
-      common_carriers: ["顺丰", "中通", "菜鸟"],
       rule: {
         order: [(val) => (val && val.length > 0) || "请输入运单号"],
         carrier: [() => this.current_carrier || "请选择快递公司"],
       },
       express_data: [], //所有运输信息
     };
+  },
+  computed: {
+    ...mapState("moduleExpress", {
+      common_carriers: (state) => state.carriers,
+    }),
   },
   methods: {
     filterFn(val, update, abort) {
@@ -124,19 +129,21 @@ export default {
         return;
       }
       Express.getCarriers().then((res) => {
-        let list = [];
-        res.data.forEach((e) => {
-          let name_cn = e.name_cn;
-          if (name_cn) {
-            for (let i in this.common_carriers) {
-              if (name_cn.indexOf(this.common_carriers[i]) >= 0) {
-                list.push(e);
-              }
-            }
-          }
-        });
+        // let list = [];
+        // res.data.forEach((e) => {
+        //   let name_cn = e.name_cn;
+        //   if (name_cn) {
+        //     for (let i in this.common_carriers) {
+        //       if (name_cn.indexOf(this.common_carriers[i]) >= 0) {
+        //         console("常用");
+        //         list.push(e);
+        //       }
+        //     }
+        //   }
+        // });
         update(() => {
-          this.carriers = list;
+          // this.carriers = list;
+          this.carriers = this.common_carriers;
         });
       });
     },
@@ -145,12 +152,12 @@ export default {
       Express.createTrack([
         {
           tracking_number: this.order_num,
-          courier_code: this.current_carrier.code,
+          courier_code: this.current_carrier.courier_code,
         },
       ]).then(() => {
         Express.getInfo({
           tracking_number: this.order_num,
-          courier_code: this.current_carrier.code,
+          courier_code: this.current_carrier.courier_code,
         }).then((res) => {
           console.log(res);
           this.express_data = res.data;

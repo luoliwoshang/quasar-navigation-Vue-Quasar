@@ -26,7 +26,6 @@ export default {
 
 body, html {
   height: 100%;
-  cursor: url(https://files-cdn.cnblogs.com/files/zouwangblog/cursor.ico), auto;
 }
 
 #app {

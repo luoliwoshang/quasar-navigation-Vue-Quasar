@@ -1,5 +1,5 @@
 import * as types from "../mutation-types.js";
-import { setNavLocalstorage } from "util/nav.js"; //自动转为json格式
+import { setNavLocalstorage } from "../../util/localStorage"; //自动转为json格式
 import { defaultNav } from "@/default/default.js";
 // 默认数据
 export default {

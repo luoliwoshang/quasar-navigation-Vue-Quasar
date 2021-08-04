@@ -9,9 +9,9 @@ export default class Express {
  */
   static getCarriers(params) {
     return fetch({
-      url: '/v2/carriers/',
+      url: '/v3/trackings/carriers',
       method: 'get',
-      params
+      params: { lang: 'en', ...params }
     })
   }
 
