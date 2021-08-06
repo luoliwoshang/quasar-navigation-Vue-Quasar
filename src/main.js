@@ -6,8 +6,8 @@ Vue.prototype.bus = new Vue()
 Vue.config.productionTip = false
 
 
-import VueParticles from 'vue-particles'  
-Vue.use(VueParticles)  
+import VueParticles from 'vue-particles'
+Vue.use(VueParticles)
 // 背景动态线条
 
 import '/src/assets/style/common.css'

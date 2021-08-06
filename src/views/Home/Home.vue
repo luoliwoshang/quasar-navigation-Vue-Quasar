@@ -3,7 +3,7 @@
     <Search :opacity="透明度"></Search>
     <navCard :opacity="透明度"></navCard>
     <Reorder></Reorder>
-    <Express></Express>
+    <Workbench></Workbench>
   </div>
 </template>
 
@@ -11,7 +11,7 @@
 import Search from "./components/Search.vue";
 import navCard from "./components/navCard.vue";
 import Reorder from "./components/Reorder.vue";
-import Express from "../../components/Express";
+import Workbench from '../../components/Workbench/index.vue'
 import { mapState } from "vuex";
 export default {
   name: "Home",
@@ -19,7 +19,7 @@ export default {
     Search,
     navCard,
     Reorder,
-    Express,
+    Workbench
   },
   data() {
     return {

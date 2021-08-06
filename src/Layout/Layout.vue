@@ -39,6 +39,9 @@
     >
       <q-btn round color="accent" icon="menu" class="rotate-45" />
     </q-page-sticky>
+    <q-page-sticky position="top-left" :offset="[18, 18]">
+      <q-btn round color="accent" icon="card_travel" @click="show_workbrench" />
+    </q-page-sticky>
   </q-layout>
 </template>
 
@@ -54,6 +57,11 @@ export default {
       drawerLeft: false,
       header: false,
     };
+  },
+  methods: {
+    show_workbrench() {
+      this.bus.$emit("show_workbench");
+    },
   },
 };
 </script>

@@ -1,5 +1,6 @@
 import * as types from "../mutation-types.js";
-import { setExpressLocalstorage } from "../../util/localStorage.js";
+import { setExpressLocalstorage, getExpressLocalstorage } from "../../util/localStorage.js";
+
 // 默认数据
 export default {
     namespaced: true,
@@ -18,18 +19,16 @@ export default {
     },
     mutations: {
         [types.SET_NEW_TRACKING_INFO](state, { courier_code, tracking_number }) {
-            // 设置指定卡片指定的特征为指定的值
             state.tracking_info.push({ courier_code, tracking_number })
             setExpressLocalstorage(state.tracking_info)
         },
         [types.INIT_TRACKING_INFO](state) {
-            if (!localStorage.v_expressed) {
+            if (!localStorage.v_express) {
                 // 如果未初始化
-                localStorage.v_expressed = []
+                setExpressLocalstorage([])
                 state.tracking_info = []
             } else {
-                state.tracking_info = JSON.parse(localStorage.v_expressed);
-                setExpressLocalstorage(state.tracking_info)
+                state.tracking_info = getExpressLocalstorage()
             }
         },
     },
