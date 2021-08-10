@@ -42,8 +42,7 @@
               v-model="current_carrier"
               label="快递公司"
               :options="carriers"
-              @filter="filterFn"
-              :option-label="(item) => item.name_cn"
+              :option-label="(item) => item.courier_name_cn"
             >
               <template v-slot:prepend>
                 <q-icon name="business" />
@@ -57,7 +56,7 @@
               </template>
             </q-select>
           </q-card-section>
-          <q-card-actions class=" q-my-none">
+          <q-card-actions class="q-my-none">
             <q-btn
               type="submit"
               push
@@ -70,7 +69,7 @@
         </form>
       </q-card>
     </div>
-    <q-dialog position="right" v-model="show_timeline">
+    <q-dialog no-route-dismiss position="right" v-model="show_timeline">
       <q-card>
         <div v-for="(item, index) in express_data" :key="index" class="q-ma-lg">
           <q-timeline color="secondary">
@@ -97,12 +96,12 @@ import { mapState, mapMutations } from "vuex";
 
 export default {
   name: "Express",
+  props: ["courier_code", "tracking_number"], //通过路由获取查询参数
   data() {
     return {
       show_timeline: false, //是否显示时间线
       order_num: "SF1315425317258",
-      current_carrier: null,
-      carriers: null, //物流商选项组
+      current_carrier: "",
       rule: {
         order: [(val) => (val && val.length > 0) || "请输入运单号"],
         carrier: [() => this.current_carrier || "请选择快递公司"],
@@ -112,7 +111,7 @@ export default {
   },
   computed: {
     ...mapState("moduleExpress", {
-      common_carriers: (state) => state.carriers,
+      carriers: (state) => state.carriers,
       tracking_info: (state) => state.tracking_info,
     }),
     current_express_param() {
@@ -124,49 +123,30 @@ export default {
   },
   methods: {
     ...mapMutations("moduleExpress", ["SET_NEW_TRACKING_INFO"]),
-    filterFn(val, update, abort) {
-      console.log(this);
-      if (this.carriers !== null) {
-        // already loaded
-        update();
-        return;
-      }
-      Express.getCarriers().then((res) => {
-        // let list = [];
-        // res.data.forEach((e) => {
-        //   let name_cn = e.name_cn;
-        //   if (name_cn) {
-        //     for (let i in this.common_carriers) {
-        //       if (name_cn.indexOf(this.common_carriers[i]) >= 0) {
-        //         console("常用");
-        //         list.push(e);
-        //       }
-        //     }
-        //   }
-        // });
-        update(() => {
-          // this.carriers = list;
-          this.carriers = this.common_carriers;
-        });
-      });
-    },
     // 开始查询添加 添加入待查询 并开始查询
     getExpressInfo() {
-      Express.createTrack([this.current_express_param]).then(() => {
-        Express.getInfo(this.current_express_param).then((res) => {
-          // 添加到快递，设置到本地信息
-          console.log(res);
-          if (
-            this.tracking_info.filter(
-              (e) =>
-                e.tracking_number === this.current_express_param.tracking_number
-            ).length === 0
-            // 判断是否已经存在，不存在则添加入本地
-          ) {
-            this.SET_NEW_TRACKING_INFO(this.current_express_param);
-          }
-          this.express_data = res.data;
-          this.show_timeline = true;
+      return new Promise((resolve, reject) => {
+        Express.createTrack([this.current_express_param]).then(() => {
+          Express.getInfo(this.current_express_param).then((res) => {
+            // 添加到快递，设置到本地信息
+            if (
+              this.tracking_info.filter(
+                (e) =>
+                  e.tracking_number ===
+                  this.current_express_param.tracking_number
+              ).length === 0
+              // 判断是否已经存在，不存在则添加入本地
+            ) {
+              // 传入订单号，物流商中文名，物流商简码
+              this.SET_NEW_TRACKING_INFO({
+                ...this.current_express_param,
+                courier_name_cn: this.current_carrier.courier_name_cn,
+              });
+            }
+            this.express_data = res.data;
+            this.show_timeline = true;
+            resolve(res);
+          });
         });
       });
     },
@@ -192,9 +172,20 @@ export default {
     },
   },
   mounted() {
-    this.bus.$on("show_express", () => {
-      this.show_search = true;
-    });
+    if (this.$route.query.courier_code) {
+      // 查询之前的物流
+      this.current_carrier = {
+        courier_code: this.$route.query.courier_code,
+        courier_name_cn: this.$route.query.courier_name_cn,
+      };
+      this.order_num = this.$route.query.tracking_number;
+      this.getExpressInfo().then((res) => {
+        console.log(res);
+        this.$router.push("express");
+      }); //查询路由传递的物流信息
+    } else {
+      console.log("添加新的快递查询");
+    }
   },
 };
 </script>

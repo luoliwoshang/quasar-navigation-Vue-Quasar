@@ -63,8 +63,17 @@
                           >
                             <q-icon name="mail"></q-icon><span>查看快递</span>
                           </q-btn>
-                          <q-select class="col" rounded>
-
+                          <q-select
+                            class="col fit"
+                            v-model="module.express.current_order"
+                            rounded
+                            :options="module.express.order_list"
+                            map-options
+                            emit-value
+                            @input="handleTrackInfoCLick"
+                            :option-value="(opt) => opt"
+                            :option-label="(opt) => opt.tracking_number"
+                          >
                           </q-select>
                         </div>
                       </div>
@@ -84,28 +93,51 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 export default {
   name: "Workbench",
   data() {
     return {
       show_workbench: false,
       tab: "main", //当前控制台页面
+      module: {
+        express: {
+          order_list: [], //本地的物流单号信息
+          current_order: {}, //当前选中的物流信息
+        },
+      },
     };
   },
   mounted() {
     this.bus.$on("show_workbench", () => {
       this.show_workbench = true;
+      this.module.express.order_list = this.tracking_info;
     });
+  },
+  computed: {
+    ...mapState("moduleExpress", {
+      tracking_info: (state) => state.tracking_info,
+    }),
   },
   methods: {
     back() {
       this.$router.push("/");
       this.tab = "main";
     },
-    express() {
-      this.$router.push("express");
+    express(item) {
+      this.$router.push({
+        path: "/express",
+        query: {
+          ...item
+        },
+      });
       this.tab = "application";
-      // this.bus.$emit("show_express");
+    },
+    // 选中之前查询的物流信息时触发
+    handleTrackInfoCLick(value) {
+      // 获取点击的项目，跳转搜索页面，查询当前选项的值
+      this.express(value);
     },
   },
 };

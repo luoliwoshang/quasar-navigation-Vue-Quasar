@@ -21,8 +21,10 @@ export default new Router({
 			component: Home,
 			children: [
 				{
-					path: 'express',
-					component: () => import('../components/Express/index.vue')
+					name:'express',
+					path: 'express/:courier_code?/:tracking_number?',
+					component: () => import('../components/Express/index.vue'),
+					props: true//使其能在组件内通过props获取
 				}
 			]
 		}, {

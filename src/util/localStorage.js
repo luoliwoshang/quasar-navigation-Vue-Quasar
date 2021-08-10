@@ -3,6 +3,7 @@ export const setNavLocalstorage = (data) => {
 }
 
 export const setExpressLocalstorage = (data) => {
+	console.log(data)
 	localStorage.v_express = JSON.stringify(data)
 }
 export const getExpressLocalstorage = () => {
