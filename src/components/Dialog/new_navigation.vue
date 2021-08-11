@@ -1,14 +1,6 @@
 <template>
   <div>
-    <q-dialog
-      v-model="是否弹出"
-      persistent
-      @hide="
-        (val) => {
-          隐藏弹窗();
-        }
-      "
-    >
+    <q-dialog ref="dialog" v-model="show" persistent @hide="handleHide">
       <q-card class="my-card" style="width: 350px">
         <q-form @submit="确认添加新导航()">
           <q-toolbar>
@@ -44,7 +36,7 @@
           </q-card-section>
           <q-separator />
           <q-card-actions align="right">
-            <q-btn flat color="primary" label="取消" @click="取消_事件()" />
+            <q-btn flat color="primary" label="取消" @click="show = false" />
             <q-btn flat color="primary" round icon="check" type="submit" />
           </q-card-actions>
         </q-form>
@@ -56,10 +48,8 @@
 <script>
 import { mapMutations } from "vuex";
 export default {
-  name: "Dialog_NewNavCard",
-  props: {
-    是否弹出: Boolean,
-  },
+  name: "Newnavigation",
+
   watch: {
     是否弹出() {
       console.log(this.是否弹出);
@@ -67,6 +57,7 @@ export default {
   },
   data() {
     return {
+      show: true,
       导航参数: {
         网站名称: "",
         网站链接: "",
@@ -83,14 +74,15 @@ export default {
       this.添加新导航({
         ...this.导航参数,
       });
-      this.$emit("添加新导航_对话框_隐藏");
+      this.handleHide();
     },
-    隐藏弹窗() {
-      return false;
+
+    handleHide() {
+      this.$emit("hide");
     },
-    取消_事件() {
-      this.$emit("添加新导航_对话框_隐藏");
-    },
+  },
+  mounted() {
+  
   },
 };
 </script>

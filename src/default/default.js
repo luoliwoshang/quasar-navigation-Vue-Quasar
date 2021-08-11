@@ -19,8 +19,8 @@ let defaultNav = [
     color: "#ffffff",
   },
 ];
-let 默认样式 = {
-  透明度: 0.7,
-  背景图片: "https://artfiles.alphacoders.com/862/thumb-1920-86236.jpg", //背景图片
+let defaultStyle = {
+  opacity: 0.7,
+  background: "https://artfiles.alphacoders.com/862/thumb-1920-86236.jpg", //背景图片
 };
-export { defaultNav, 默认样式 };
+export { defaultNav, defaultStyle };

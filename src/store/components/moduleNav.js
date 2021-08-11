@@ -49,7 +49,7 @@ export default {
       });
       setNavLocalstorage(状态.navs); //设置存入本地
     },
-    初始化_导航(state) {
+    [types.INIT_NAV](state) {
       if (!localStorage.v_navs) {
         // 如果未初始化
         localStorage.v_navs = JSON.stringify(defaultNav);

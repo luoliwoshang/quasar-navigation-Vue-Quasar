@@ -25,6 +25,11 @@ export default new Router({
 					path: 'express/:courier_code?/:tracking_number?',
 					component: () => import('../components/Express/index.vue'),
 					props: true//使其能在组件内通过props获取
+				},
+				{
+					name:'setBackground',
+					path:'setBackground',
+					component:()=>import('../components/Dialog/set_background.vue')
 				}
 			]
 		}, {

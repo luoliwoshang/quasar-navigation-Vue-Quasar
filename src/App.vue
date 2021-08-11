@@ -9,14 +9,14 @@ import { mapMutations } from "vuex";
 export default {
   name: "App",
   methods: {
-    ...mapMutations("moduleNav", ["初始化_导航"]),
-    ...mapMutations("样式模组", ["初始化_样式"]),
+    ...mapMutations("moduleNav", ["INIT_NAV"]),
+    ...mapMutations("moduleStyle", ["init_style"]),
     ...mapMutations("moduleExpress", ["INIT_TRACKING_INFO"]),
   },
   mounted() {
-    this.初始化_导航();//初始化导航
-    this.初始化_样式(); //初始化主页样式
-    this.INIT_TRACKING_INFO()//初始化快递单号信息
+    this.INIT_NAV(); //初始化导航
+    this.init_style(); //初始化主页样式
+    this.INIT_TRACKING_INFO(); //初始化快递单号信息
   },
 };
 </script>

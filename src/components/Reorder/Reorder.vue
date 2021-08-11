@@ -1,13 +1,13 @@
 <template>
   <div class="Reorder">
-    <q-dialog v-model="显示_卡片排序" position="right">
+    <q-dialog @hide="handleHide" v-model="显示_卡片排序" position="right">
       <q-card class="container">
         <q-card-section>
           <div class="text-h6">拖动卡片以排序</div>
         </q-card-section>
         <q-card-section>
-          <vuedraggable animation=200 class="wrapper" v-model="navs">
-            <div class="item" v-for="(item, index) in navs">
+          <vuedraggable animation="200" class="wrapper" v-model="navs">
+            <div class="item" v-for="(item, index) in navs" :key="index">
               <q-btn
                 style="cursor: all-scroll"
                 :style="{ background: item.backgroundColor, color: item.color }"
@@ -29,12 +29,16 @@ export default {
   name: "Reorder",
   data() {
     return {
-      显示_卡片排序: false,
+      显示_卡片排序: true,
       navs: [],
     };
   },
   methods: {
     ...mapMutations("moduleNav", ["SET_NAVS"]),
+    // ? 对话框隐藏
+    handleHide() {
+      this.$emit("hide");
+    },
   },
   watch: {
     navs() {
@@ -42,13 +46,9 @@ export default {
     },
   },
   components: { vuedraggable },
-
   mounted() {
     setTimeout(() => {
       this.navs = [...this.$store.state.moduleNav.navs];
-    });
-    this.bus.$on("显示_卡片排序", () => {
-      this.显示_卡片排序 = true;
     });
   },
 };

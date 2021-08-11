@@ -1,3 +1,4 @@
+export const INIT_NAV="INIT_NAV"//初始化导航
 export const SET_NAVS="SET_NAVS"//设置所有的导航
 export const CHANGE_NAV_URL="CHANGE_NAV_URL"//修改指定导航卡片的url
 export const CHANGE_NAV_NAME="CHANGE_NAV_NAME"//修改指定导航卡片的name

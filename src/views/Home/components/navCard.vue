@@ -4,7 +4,8 @@
 			<div 
 			:style="{opacity}"
 			class="col-4 col-lg-4 col-md-6 col-xs-12"
-			v-for="(item,index) in navs">
+			v-for="(item,index) in navs"
+			:key="index">
 				<q-card
 				bordered
 				v-ripple:white
