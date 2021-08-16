@@ -125,7 +125,31 @@ export default {
     ...mapMutations("moduleExpress", ["SET_NEW_TRACKING_INFO"]),
     // 开始查询添加 添加入待查询 并开始查询
     getExpressInfo() {
-      return new Promise((resolve, reject) => {
+      // return new Promise((resolve, reject) => {
+      //   Express.createTrack([this.current_express_param]).then(() => {
+      //     Express.getInfo(this.current_express_param).then((res) => {
+      //       // 添加到快递，设置到本地信息
+      //       if (
+      //         this.tracking_info.filter(
+      //           (e) =>
+      //             e.tracking_number ===
+      //             this.current_express_param.tracking_number
+      //         ).length === 0
+      //         // 判断是否已经存在，不存在则添加入本地
+      //       ) {
+      //         // 传入订单号，物流商中文名，物流商简码
+      //         this.SET_NEW_TRACKING_INFO({
+      //           ...this.current_express_param,
+      //           courier_name_cn: this.current_carrier.courier_name_cn,
+      //         });
+      //       }
+      //       this.express_data = res.data;
+      //       this.show_timeline = true;
+      //       resolve(res);
+      //     });
+      //   });
+      // });
+            return new Promise((resolve, reject) => {
         Express.createTrack([this.current_express_param]).then(() => {
           Express.getInfo(this.current_express_param).then((res) => {
             // 添加到快递，设置到本地信息
