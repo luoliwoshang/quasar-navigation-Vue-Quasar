@@ -10,6 +10,9 @@ import VueParticles from 'vue-particles'
 Vue.use(VueParticles)
 // 背景动态线条
 
+import '@/icon/iconfont.css'
+import '@/icon/iconfont.js'
+
 import '/src/assets/style/common.css'
 import './quasar'
 
