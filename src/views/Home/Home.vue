@@ -52,5 +52,6 @@ export default {
   background-origin: border-box;
   background-attachment: fixed;
   min-height: 100vh;
+  background-size: 100%;
 }
 </style>
