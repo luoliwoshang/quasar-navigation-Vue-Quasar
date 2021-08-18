@@ -1,9 +1,5 @@
 <template>
   <div>
-    <div class="control">
-      <q-btn @click="play({ status: 'stop' })">暂停</q-btn>
-      <q-btn @click="play({ status: 'start' })">开始</q-btn>
-    </div>
     <div class="container" :style="containerStyle">
       <div>
         <!-- 
@@ -15,13 +11,21 @@
         >
           <use xlink:href="#icon-feiji"></use>
         </svg> -->
-        <svg
-          class="icon plane colorfulFont"
-          :style="planeStyle"
-          @mousedown="touchstart($event)"
-        >
-          <use xlink:href="#icon-feiji"></use>
-        </svg>
+        <div class="plane" :style="planeStyle" @mousedown="touchstart($event)">
+          <q-linear-progress
+            :value="plane.hp / 100"
+            class="hpLine"
+            color="red"
+            dark
+            stripe
+            rounded
+            size="10px"
+          />
+          <svg class="icon colorfulFont">
+            <use xlink:href="#icon-feiji"></use>
+          </svg>
+        </div>
+
         <div
           class="bullet"
           v-for="(bullet, index) in bullets"
@@ -51,11 +55,144 @@
         </div>
       </div>
     </div>
+    <div class="control">
+      <div class="row">
+        <div class="col">
+          <q-input
+            v-model="shootParam.own_side.frequency"
+            label="子弹发射频率 越大越慢"
+            filled
+            dense
+          />
+        </div>
+        <div class="col">
+          <q-slider
+            v-model="shootParam.own_side.frequency"
+            :min="1"
+            :max="100"
+          />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <q-input
+            v-model.number="setting.bullet.single_shift"
+            label="子弹单刻时间移动距离"
+            filled
+            dense
+          />
+        </div>
+        <div class="col">
+          <q-slider
+            v-model="setting.bullet.single_shift"
+            :min="1"
+            :max="100"
+          />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <q-input
+            v-model="setting.bullet.damage_amount"
+            label="子弹伤害值"
+            filled
+            dense
+          />
+        </div>
+        <div class="col">
+          <q-slider
+            v-model="setting.bullet.damage_amount"
+            :min="1"
+            :max="100"
+          />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <q-input v-model="plane.hp" label="己方生命值" filled dense />
+        </div>
+        <div class="col">
+          <q-slider
+            v-model="plane.hp"
+            :min="1"
+            :max="100"
+          />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <q-input
+            v-model="setting.enemy.damage_amount"
+            label="敌机撞击伤害值"
+            filled
+            dense
+          />
+        </div>
+        <div class="col">
+          <q-slider
+            v-model="setting.enemy.damage_amount"
+            :min="1"
+            :max="100"
+          />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <q-input
+            v-model.number="setting.enemy.single_shift"
+            label="敌机单刻移动距离"
+            filled
+            dense
+          />
+        </div>
+        <div class="col">
+          <q-slider
+            v-model="setting.enemy.single_shift"
+            :min="1"
+            :max="100"
+          />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <q-input v-model="setting.enemy.hp" label="敌机生命值" filled dense />
+        </div>
+        <div class="col">
+          <q-slider
+            v-model="setting.enemy.hp"
+            :min="1"
+            :max="100"
+          />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <q-input
+            v-model="shootParam.enemy_side.frequency"
+            label="敌机出现频率 越大越慢"
+            filled
+            dense
+          />
+        </div>
+        <div class="col">
+          <q-slider
+            v-model="shootParam.enemy_side.frequency"
+            :min="1"
+            :max="100"
+          />
+        </div>
+      </div>
+
+      <q-separator />
+
+      <q-btn @click="play({ status: 'stop' })">暂停</q-btn>
+      <q-btn @click="play({ status: 'start' })">开始</q-btn>
+    </div>
   </div>
 </template>
 
 <script>
-// * 子弹每秒行进速度=default.bullet.single_shift * shootParam.interval
+// * 子弹每秒行进速度=setting.bullet.single_shift * shootParam.interval
 export default {
   name: "plane",
   data() {
@@ -90,7 +227,8 @@ export default {
           height: 400,
         },
       },
-      default: {
+      // 默认配置
+      setting: {
         // 己方子弹配置
         bullet: {
           pos: {
@@ -102,7 +240,14 @@ export default {
             width: 30,
             height: 30,
           },
-          single_shift: 6, // ? 子弹单次移动距离
+          //碰撞体积位移后计算得出
+          collide: {
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+          },
+          single_shift: 1, // ? 子弹单次移动距离
           damage_amount: 10, // ? 单次伤害量
         },
         enemy: {
@@ -114,13 +259,21 @@ export default {
             width: 30,
             height: 30,
           },
+          collide: {
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+          },
           hp: 100,
-          speed: 1,
+          single_shift: 2,
+          damage_amount: 50, // ? 单次伤害量
         },
       },
       plane: {
         pos: {
           x: 0,
+          y: 340,
         },
         nextPos: {
           x: 0,
@@ -129,14 +282,25 @@ export default {
           width: 50,
           height: 50,
         },
+        collide: {
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+        },
+        hp: 100,
       },
       bullets: [],
       enemies: [], //所有敌人
       // 统一管理敌方我方的射击状态
       shootParam: {
+        enemy_side: {
+          request_total: 0, //请求创建的敌机总量 在准备创建时添加计数
+          frequency: 100, // 敌机出动频率 n个单位时间发射一次
+        },
         own_side: {
           request_total: 0, //请求创建的子弹总量 在准备创建时添加计数
-          frequency: 10, // 子弹发射频率 n个单位时间发射一次
+          frequency: 30, // 子弹发射频率 n个单位时间发射一次
         },
       },
     };
@@ -153,8 +317,15 @@ export default {
     },
     // 我方
     planeStyle() {
+      this.plane.collide = {
+        left: this.plane.pos.x,
+        right: this.plane.pos.x + this.plane.size.width,
+        top: this.plane.pos.y,
+        bottom: this.plane.pos.y + this.plane.size.height,
+      };
       return {
         left: this.plane.pos.x + "px",
+        top: this.plane.pos.y + "px",
         width: this.plane.size.width + "px",
         height: this.plane.size.height + "px",
       };
@@ -166,14 +337,7 @@ export default {
         right: this.container.pos.left + this.container.size.width,
       };
     },
-    // 是否在边界
-    isEdge() {
-      return (
-        this.plane.size.width + this.plane.pos.x + this.container.pos.left >=
-        this.borderArea.right
-      );
-    },
-    // 下一次行动是否到边界
+    // 下一次己方唯一是否到边界
     isNextEdge() {
       return (
         this.plane.size.width +
@@ -187,6 +351,14 @@ export default {
       return (
         this.shootParam.own_side.request_total %
           this.shootParam.own_side.frequency ===
+        0
+      );
+    },
+    // 是否继续添加敌机，根据敌机添加频率
+    permitCreateEnemy() {
+      return (
+        this.shootParam.enemy_side.request_total %
+          this.shootParam.enemy_side.frequency ===
         0
       );
     },
@@ -227,51 +399,72 @@ export default {
       // 当频率准许时创建新的子弹
       if (this.permitCreateBullet) {
         this.bullets.push({
-          ...this.default.bullet,
+          ...this.setting.bullet,
           pos: {
             x:
               this.plane.pos.x +
               this.plane.size.width / 2 -
-              this.default.bullet.size.width / 2,
+              this.setting.bullet.size.width / 2,
             y:
               this.container.size.height -
               this.plane.size.height -
-              this.default.bullet.size.height,
+              this.setting.bullet.size.height,
           },
         });
       }
     },
-    create_enemy({ position = "random" }) {
-      this.enemies.push({
-        ...this.default.enemy,
-        pos: {
-          x:
-            Math.floor(
-              Math.random() *
-                (this.container.size.width - this.default.enemy.size.width)
-            ) + 1,
-          y: 0,
-        },
-      });
+    create_enemy(position = "random") {
+      this.shootParam.enemy_side.request_total += 1;
+      // 当频率准许时创建新的敌机
+      if (this.permitCreateEnemy) {
+        this.enemies.push({
+          ...this.setting.enemy,
+          pos: {
+            x:
+              Math.floor(
+                Math.random() *
+                  (this.container.size.width - this.setting.enemy.size.width)
+              ) + 1,
+            y: 0,
+          },
+        });
+      }
     },
+
     play({ status }) {
       if (status === "start" && !this.play_state.timer) {
         // 只有第一次启动时才会添加定时器
         this.play_state.timer = setInterval(() => {
-          //每个 刻 执行
-
+          //每刻执行一次
+          this.create_enemy(); //发起创建敌机请求
           this.create_bullet(); //发起创建子弹请求
-
           // 删除位移且删除已经离开边界的子弹
           this.bullets = this.bullets.filter((item) => {
-            item.pos.y += -this.default.bullet.single_shift; // ? 位移
+            item.pos.y += -this.setting.bullet.single_shift; // ? 位移
+            item.collide = this.get_collide(item); // ? 每次移动更新碰撞位置
             let hited = this.is_hit_enemy(item); // ? 判断当前子弹是否击中任意一架敌机
-            return item.pos.y >= -this.default.bullet.size.height && !hited; //保留 未出边界 且 未击中敌机的 子弹
+            return (
+              //保留 未出边界 且 未击中敌机的 子弹
+              item.collide.top >= -this.setting.bullet.size.height && !hited
+            );
           });
+
           this.enemies = this.enemies.filter((item) => {
-            item.pos.y += this.default.enemy.speed;
-            let hited = this.is_hit_own(item);
-            return true;
+            item.pos.y += this.setting.enemy.single_shift; // ? 位移
+            item.collide = this.get_collide(item); // ? 每次移动更新碰撞位置
+            let hited = this.is_hit_own(item); // ? 判断是否击中己方
+
+            console.log(
+              item.collide.top >=
+                this.container.size.height + this.setting.enemy.size.height
+            );
+            //       item.collide.top >=
+            // this.container.size.height + this.setting.enemy.size.height &&
+            return (
+              item.collide.top <=
+                this.container.size.height + this.setting.enemy.size.height &&
+              !hited
+            );
           });
         }, this.play_state.interval);
       } else if (status === "stop") {
@@ -279,27 +472,50 @@ export default {
         this.play_state.timer = null;
       }
     },
-    is_impact({ objA, objB }) {
-      return (
-        objA.pos.y < objB.pos.y + objB.size.height &&
-        objA.pos.x + objA.size.width > objB.pos.x &&
-        objA.pos.x < objB.pos.x + objB.size.width
-      );
+    /**
+     * @description 判断两个对象是否撞击
+     * @param objA 对象A
+     * @param objB 对象B
+     * @param bottom_to_top  方向，默认判断A是否接触B底部 置反时 判断A是否接触B顶部
+     * @returns objA & objB 是否相遇
+     */
+    is_impact({ objA, objB, bottom_to_top = true }) {
+      let counter_x_left = // 左侧相遇条件: > b 左侧 && < b 右侧
+        objA.collide.right > objB.collide.left &&
+        objA.collide.right < objB.collide.right;
+      let counter_x_right = // 右侧相遇条件: > b 左侧 && < b 右侧
+        objA.collide.left < objB.collide.right &&
+        objA.collide.left > objB.collide.left;
+      let counter_x = counter_x_left || counter_x_right;
+      let counter_y = false;
+      if (bottom_to_top) {
+        counter_y = objA.collide.top < objB.collide.bottom; //返回高度是否相遇
+      } else {
+        counter_y = objA.collide.bottom > objB.collide.top; //返回高度是否相遇
+      }
+      return counter_x && counter_y;
+    },
+    /**
+     * @description 判断两个对象是否撞击
+     * @param obj 拥有pos&size的对象
+     */
+    get_collide(obj) {
+      return {
+        top: obj.pos.y,
+        bottom: obj.pos.y + obj.size.height,
+        left: obj.pos.x,
+        right: obj.pos.x + obj.size.width,
+      };
     },
     is_hit_enemy(bullet) {
       let { pos, size, damage_amount } = bullet;
       let ifHit = false;
       //判断当前是否能击中任何一个敌人,击中后敌人消失
       this.enemies = this.enemies.filter((enemy) => {
-        // 判断当前 bullet y轴距离是否接触到 enemy 底部
         // * 存活条件 不符合以下条件的enemy即为击中
-        // ? bullet y轴需要大于 enemy 离 容器顶部 + enemy 的高度
-        // ? bullet x轴距离 + bullet 宽度 需要小于 enemy 离左边容器距离
-        // ? bullet 离x轴距离 大于 enemy 离左边距离 + enemy宽度
         if (this.is_impact({ objA: bullet, objB: enemy })) {
           // 子弹碰到敌机扣除子弹的伤害对应的hp
-          console.log("子弹碰到敌机");
-          ifHit = true; //设置当前子弹碰到敌机
+          ifHit = true; //击中状态
           return (enemy.hp -= damage_amount) > 0;
         } else {
           //没有碰到敌机
@@ -310,11 +526,24 @@ export default {
     },
     is_hit_own(enemy) {
       // todo 与子弹一起建立工具函数复用
+      let isHit = this.is_impact({
+        objA: enemy,
+        objB: this.plane,
+        bottom_to_top: false,
+      });
+      if (isHit) {
+        this.plane.hp -= enemy.damage_amount;
+        if (this.plane.hp <= 0) {
+          this.$q.notify({
+            type: "negative",
+            message: `你已经die了`,
+          });
+        }
+      }
+      return isHit; //返回是否击中己方
     },
   },
-  mounted() {
-    this.create_enemy({ position: "random" });
-  },
+  mounted() {},
 };
 </script>
 <style lang="stylus" scoped>
@@ -322,6 +551,7 @@ export default {
   position: relative;
   left: 50px;
   top: 50px;
+  width: 200px;
 }
 
 .container {
@@ -332,8 +562,17 @@ export default {
   .plane {
     cursor: pointer;
     position: absolute;
-    bottom: 0;
     font-size: 30px;
+
+    .hpLine {
+      position: absolute;
+      bottom: 0px;
+    }
+
+    .icon {
+      width: 100%;
+      height: 100%;
+    }
   }
 
   .bullet {
