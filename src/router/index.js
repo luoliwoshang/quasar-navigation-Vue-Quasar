@@ -30,12 +30,17 @@ export default new Router({
 					name:'setBackground',
 					path:'setBackground',
 					component:()=>import('../components/Dialog/set_background.vue')
+				},
+				{
+					name:'plane',
+					path:'plane',
+					component:()=>import('../components/Plane/index.vue')
 				}
 			]
 		}, {
 			path: 'test',
 			name: 'test',
-			component: () => import('../views/Test.vue')
+			component: () => import('../components/Plane/index.vue')
 		}]
 	}]
 })

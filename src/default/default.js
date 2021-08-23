@@ -6,8 +6,8 @@ let defaultNav = [
     backgroundColor: "#FF5C7C",
   },
   {
-    name: "百度",
-    url: "https://www.baidu.com",
+    name: "在线壁纸",
+    url: "https://wall.alphacoders.com/?lang=Chinese",
     backgroundColor: "#99cfff",
     color: "#ffffff",
   },
@@ -21,6 +21,6 @@ let defaultNav = [
 ];
 let defaultStyle = {
   opacity: 0.7,
-  background: "https://artfiles.alphacoders.com/862/thumb-1920-86236.jpg", //背景图片
+  background: "https://images3.alphacoders.com/822/822160.png", //背景图片
 };
 export { defaultNav, defaultStyle };

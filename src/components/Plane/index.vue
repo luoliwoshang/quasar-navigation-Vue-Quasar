@@ -1,193 +1,218 @@
 <template>
-  <div>
-    <div class="container" :style="containerStyle">
-      <div>
-        <!-- 
-        <svg
-          class="icon plane colorfulFont"
-          :style="planeStyle"
-          @mousedown="touchstart($event)"
-          @click="shoot"
-        >
-          <use xlink:href="#icon-feiji"></use>
-        </svg> -->
-        <div class="plane" :style="planeStyle" @mousedown="touchstart($event)">
-          <q-linear-progress
-            :value="plane.hp / 100"
-            class="hpLine"
-            color="red"
-            dark
-            stripe
-            rounded
-            size="10px"
-          />
-          <svg class="icon colorfulFont">
-            <use xlink:href="#icon-feiji"></use>
-          </svg>
+  <div ref="el">
+    <q-tab-panels
+      v-model="scene"
+      animated
+      vertical
+      transition-prev="jump-up"
+      transition-next="jump-up"
+      class="shadow-2 rounded-borders"
+    >
+      <q-tab-panel name="setting" class="">
+        <div class="control">
+          <div class="row">
+            <div class="col">
+              <q-input
+                v-model="shootParam.own_side.frequency"
+                label="子弹发射频率 越大越慢"
+                filled
+                dense
+              />
+            </div>
+            <div class="col">
+              <q-slider
+                v-model="shootParam.own_side.frequency"
+                :min="1"
+                :max="100"
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <q-input
+                v-model.number="setting.bullet.single_shift"
+                label="子弹单刻时间移动距离"
+                filled
+                dense
+              />
+            </div>
+            <div class="col">
+              <q-slider
+                v-model="setting.bullet.single_shift"
+                :min="1"
+                :max="100"
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <q-input
+                v-model="setting.bullet.damage_amount"
+                label="子弹伤害值"
+                filled
+                dense
+              />
+            </div>
+            <div class="col">
+              <q-slider
+                v-model="setting.bullet.damage_amount"
+                :min="1"
+                :max="100"
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <q-input v-model="plane.hp" label="己方生命值" filled dense />
+            </div>
+            <div class="col">
+              <q-slider v-model="plane.hp" :min="1" :max="100" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <q-input
+                v-model="setting.enemy.damage_amount"
+                label="敌机撞击伤害值"
+                filled
+                dense
+              />
+            </div>
+            <div class="col">
+              <q-slider
+                v-model="setting.enemy.damage_amount"
+                :min="1"
+                :max="100"
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <q-input
+                v-model.number="setting.enemy.single_shift"
+                label="敌机单刻移动距离"
+                filled
+                dense
+              />
+            </div>
+            <div class="col">
+              <q-slider
+                v-model="setting.enemy.single_shift"
+                :min="1"
+                :max="100"
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <q-input
+                v-model="setting.enemy.hp"
+                label="敌机生命值"
+                filled
+                dense
+              />
+            </div>
+            <div class="col">
+              <q-slider v-model="setting.enemy.hp" :min="1" :max="100" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <q-input
+                v-model="shootParam.enemy_side.frequency"
+                label="敌机出现频率 越大越慢"
+                filled
+                dense
+              />
+            </div>
+            <div class="col">
+              <q-slider
+                v-model="shootParam.enemy_side.frequency"
+                :min="1"
+                :max="100"
+              />
+            </div>
+          </div>
+
+          <q-separator />
+        </div>
+      </q-tab-panel>
+      <q-tab-panel name="plane" class="q-pa-none">
+        <div class="text-center q-py-md fit">
+          <q-btn-group rounded>
+            <q-btn
+              push
+              color="primary"
+              label="暂停"
+              @click="play({ status: 'stop' })"
+            />
+            <q-btn
+              push
+              color="primary"
+              label="开始"
+              @click="play({ status: 'start' })"
+            />
+            <q-btn
+              push
+              icon="settings"
+              color="primary"
+              @click="scene = 'setting'"
+            />
+          </q-btn-group>
         </div>
 
-        <div
-          class="bullet"
-          v-for="(bullet, index) in bullets"
-          :key="'bullet' + index"
-          :style="{
-            left: bullet.pos.x + 'px',
-            top: bullet.pos.y + 'px',
-            width: bullet.size.width + 'px',
-            height: bullet.size.height + 'px',
-          }"
-        >
-          ||
-        </div>
-        <div
-          class="enemy"
-          v-for="(enemy, index) in enemies"
-          :key="'enemy' + index"
-          :style="{
-            left: enemy.pos.x + 'px',
-            top: enemy.pos.y + 'px',
-            width: enemy.size.width + 'px',
-            height: enemy.size.height + 'px',
-          }"
-        >
-          <q-linear-progress :value="enemy.hp / 100" class="hpLine" />
-          <q-icon name="flight" class="icon rotate-180"></q-icon>
-        </div>
-      </div>
-    </div>
-    <div class="control">
-      <div class="row">
-        <div class="col">
-          <q-input
-            v-model="shootParam.own_side.frequency"
-            label="子弹发射频率 越大越慢"
-            filled
-            dense
-          />
-        </div>
-        <div class="col">
-          <q-slider
-            v-model="shootParam.own_side.frequency"
-            :min="1"
-            :max="100"
-          />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <q-input
-            v-model.number="setting.bullet.single_shift"
-            label="子弹单刻时间移动距离"
-            filled
-            dense
-          />
-        </div>
-        <div class="col">
-          <q-slider
-            v-model="setting.bullet.single_shift"
-            :min="1"
-            :max="100"
-          />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <q-input
-            v-model="setting.bullet.damage_amount"
-            label="子弹伤害值"
-            filled
-            dense
-          />
-        </div>
-        <div class="col">
-          <q-slider
-            v-model="setting.bullet.damage_amount"
-            :min="1"
-            :max="100"
-          />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <q-input v-model="plane.hp" label="己方生命值" filled dense />
-        </div>
-        <div class="col">
-          <q-slider
-            v-model="plane.hp"
-            :min="1"
-            :max="100"
-          />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <q-input
-            v-model="setting.enemy.damage_amount"
-            label="敌机撞击伤害值"
-            filled
-            dense
-          />
-        </div>
-        <div class="col">
-          <q-slider
-            v-model="setting.enemy.damage_amount"
-            :min="1"
-            :max="100"
-          />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <q-input
-            v-model.number="setting.enemy.single_shift"
-            label="敌机单刻移动距离"
-            filled
-            dense
-          />
-        </div>
-        <div class="col">
-          <q-slider
-            v-model="setting.enemy.single_shift"
-            :min="1"
-            :max="100"
-          />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <q-input v-model="setting.enemy.hp" label="敌机生命值" filled dense />
-        </div>
-        <div class="col">
-          <q-slider
-            v-model="setting.enemy.hp"
-            :min="1"
-            :max="100"
-          />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <q-input
-            v-model="shootParam.enemy_side.frequency"
-            label="敌机出现频率 越大越慢"
-            filled
-            dense
-          />
-        </div>
-        <div class="col">
-          <q-slider
-            v-model="shootParam.enemy_side.frequency"
-            :min="1"
-            :max="100"
-          />
-        </div>
-      </div>
+        <div class="container" :style="containerStyle">
+          <div>
+            <div
+              class="plane"
+              :style="planeStyle"
+              @mousedown.stop="touchstart($event)"
+            >
+              <q-linear-progress
+                :value="plane.hp / 100"
+                class="hpLine"
+                color="red"
+                dark
+                stripe
+                rounded
+                size="10px"
+              />
+              <svg class="icon colorfulFont">
+                <use xlink:href="#icon-feiji"></use>
+              </svg>
+            </div>
 
-      <q-separator />
-
-      <q-btn @click="play({ status: 'stop' })">暂停</q-btn>
-      <q-btn @click="play({ status: 'start' })">开始</q-btn>
-    </div>
+            <div
+              class="bullet"
+              v-for="(bullet, index) in bullets"
+              :key="'bullet' + index"
+              :style="{
+                left: bullet.pos.x + 'px',
+                top: bullet.pos.y + 'px',
+                width: bullet.size.width + 'px',
+                height: bullet.size.height + 'px',
+              }"
+            >
+              ||
+            </div>
+            <div
+              class="enemy"
+              v-for="(enemy, index) in enemies"
+              :key="'enemy' + index"
+              :style="{
+                left: enemy.pos.x + 'px',
+                top: enemy.pos.y + 'px',
+                width: enemy.size.width + 'px',
+                height: enemy.size.height + 'px',
+              }"
+            >
+              <q-linear-progress :value="enemy.hp / 100" class="hpLine" />
+              <q-icon name="flight" class="icon rotate-180"></q-icon>
+            </div>
+          </div>
+        </div>
+      </q-tab-panel>
+    </q-tab-panels>
   </div>
 </template>
 
@@ -197,6 +222,7 @@ export default {
   name: "plane",
   data() {
     return {
+      scene: "plane", //setting 为设置
       play_state: {
         timer: null, //存放全局的单位时间 定时器
         interval: 20, //n ms子弹会行进一次
@@ -219,8 +245,8 @@ export default {
       },
       container: {
         pos: {
-          left: 50,
-          top: 50,
+          left: 30,
+          top: 0,
         },
         size: {
           width: 200,
@@ -454,12 +480,6 @@ export default {
             item.collide = this.get_collide(item); // ? 每次移动更新碰撞位置
             let hited = this.is_hit_own(item); // ? 判断是否击中己方
 
-            console.log(
-              item.collide.top >=
-                this.container.size.height + this.setting.enemy.size.height
-            );
-            //       item.collide.top >=
-            // this.container.size.height + this.setting.enemy.size.height &&
             return (
               item.collide.top <=
                 this.container.size.height + this.setting.enemy.size.height &&
@@ -543,17 +563,28 @@ export default {
       return isHit; //返回是否击中己方
     },
   },
-  mounted() {},
+  mounted() {
+    this.bus.$emit("changeWorkBenchMainHeight", this.$refs.el.offsetHeight); //发送高度信息设置workbench渐变
+    this.bus.$on("backComponentsMain", () => {
+      this.play({ status: "stop" });
+      this.scene = "plane";
+    });
+  },
+  watch: {
+    scene() {
+      this.$nextTick(() => {
+        console.log(this.$refs.el.offsetHeight);
+        this.bus.$emit("changeWorkBenchMainHeight", this.$refs.el.offsetHeight); //发送高度信息设置workbench渐变
+      });
+    },
+  },
 };
 </script>
 <style lang="stylus" scoped>
-.control {
-  position: relative;
-  left: 50px;
-  top: 50px;
-  width: 200px;
-}
-
+// .control {
+// position: relative;
+// width: 200px;
+// }
 .container {
   position: relative;
   border: 1px solid red;
