@@ -209,6 +209,19 @@
               <q-linear-progress :value="enemy.hp / 100" class="hpLine" />
               <q-icon name="flight" class="icon rotate-180"></q-icon>
             </div>
+            <div
+              class="enemy-bullet"
+              v-for="(bullet, index) in enemy_bullets"
+              :key="'enemy-bullet' + index"
+              :style="{
+                left: bullet.pos.x + 'px',
+                top: bullet.pos.y + 'px',
+                width: bullet.size.width + 'px',
+                height: bullet.size.height + 'px',
+              }"
+            >
+              ||
+            </div>
           </div>
         </div>
       </q-tab-panel>
@@ -276,6 +289,7 @@ export default {
           single_shift: 1, // ? 子弹单次移动距离
           damage_amount: 10, // ? 单次伤害量
         },
+        // 敌机配置
         enemy: {
           pos: {
             x: 0,
@@ -293,7 +307,23 @@ export default {
           },
           hp: 100,
           single_shift: 2,
-          damage_amount: 50, // ? 单次伤害量
+          damage_amount: 50, // ? 敌机撞击单次伤害量
+          request_total: 0, // ? 敌机请求创建子弹的次数
+          frequency: 30, // ? 射击子弹的频率
+          permitCreateBullet: false, // ? 是否允许生成子弹
+        },
+        // 敌机子弹配置
+        enemy_bullet: {
+          pos: {
+            x: 0,
+            y: 0,
+          },
+          size: {
+            width: 10,
+            height: 10,
+          },
+          single_shift: 10,
+          damage_amount:40
         },
       },
       plane: {
@@ -316,8 +346,16 @@ export default {
         },
         hp: 100,
       },
-      bullets: [],
+      bullets: [], //所有己方子弹
       enemies: [], //所有敌人
+      enemy_bullets: [], //所有敌方子弹
+      permit_object: {
+        //允许出现的对象
+        enemy: true,
+        bullet: true,
+        enemy_bullet: true,
+      },
+      max_reachable_area: [], //所有移动对象的最大可到达区域
       // 统一管理敌方我方的射击状态
       shootParam: {
         enemy_side: {
@@ -359,17 +397,17 @@ export default {
     // 边界
     borderArea() {
       return {
-        left: this.container.pos.left,
-        right: this.container.pos.left + this.container.size.width,
+        left: 0,
+        right: +this.container.size.width,
+        top: 0,
+        bottom: this.container.size.height,
       };
     },
-    // 下一次己方唯一是否到边界
+    // 下一次己方飞机唯一是否到边界
     isNextEdge() {
       return (
-        this.plane.size.width +
-          this.plane.nextPos.x +
-          this.container.pos.left >=
-          this.borderArea.right || this.plane.nextPos.x <= 0
+        this.plane.size.width + this.plane.nextPos.x >= this.borderArea.right ||
+        this.plane.nextPos.x <= 0
       );
     },
     // 是否继续填充子弹，根据己方射击频率
@@ -388,108 +426,49 @@ export default {
         0
       );
     },
+    // 填充子弹时的参数
+    create_bullet_param() {
+      return {
+        beforeCreate: () => {
+          this.shootParam.own_side.request_total += 1;
+        },
+        permit: this.permitCreateBullet,
+        magezine: this.bullets,
+        setting: this.setting.bullet,
+        pos: {
+          x:
+            this.plane.pos.x +
+            this.plane.size.width / 2 -
+            this.setting.bullet.size.width / 2,
+          y:
+            this.container.size.height -
+            this.plane.size.height -
+            this.setting.bullet.size.height,
+        },
+      };
+    },
   },
   methods: {
-    touchstart(e) {
-      this.mouse.con.left = e.offsetX;
-      this.mouse.con.right = this.plane.size.width - e.offsetX;
-      this.mouse.prev.pageX = e.pageX; //设置初始距离
+    // * 下方为工具类函数
 
-      let move = window.addEventListener("mousemove", this.plane_move);
-      // 抬起时注销事件
-      window.addEventListener("mouseup", (e) => {
-        window.removeEventListener("mousemove", this.plane_move);
-      });
-    },
-    // 开始移动
-    plane_move(e) {
-      //判断下一次移动是否接触边界
-      this.mouse.remove.x = e.pageX - this.mouse.prev.pageX; //设置移动的x距离
-      this.mouse.prev.pageX = e.pageX; //设置下一次相对的开始位置
-      this.plane.nextPos.x += this.mouse.remove.x; //将要移动到的距离
-      this.plane.pos.x = this.isNextEdge
-        ? this.plane.pos.x
-        : this.plane.nextPos.x;
-      // if (!this.isNextEdge) {
-      //   this.plane.pos.x = this.plane.nextPos.x;
-      // }
-    },
-    shoot() {
-      this.create_bullet();
-      this.play({ status: "start" }); //开始
-    },
-    // 创建子弹
-    create_bullet() {
-      // 每次创建子弹时发起请求
-      this.shootParam.own_side.request_total += 1;
-      // 当频率准许时创建新的子弹
-      if (this.permitCreateBullet) {
-        this.bullets.push({
-          ...this.setting.bullet,
-          pos: {
-            x:
-              this.plane.pos.x +
-              this.plane.size.width / 2 -
-              this.setting.bullet.size.width / 2,
-            y:
-              this.container.size.height -
-              this.plane.size.height -
-              this.setting.bullet.size.height,
-          },
-        });
-      }
-    },
-    create_enemy(position = "random") {
-      this.shootParam.enemy_side.request_total += 1;
-      // 当频率准许时创建新的敌机
-      if (this.permitCreateEnemy) {
-        this.enemies.push({
-          ...this.setting.enemy,
-          pos: {
-            x:
-              Math.floor(
-                Math.random() *
-                  (this.container.size.width - this.setting.enemy.size.width)
-              ) + 1,
-            y: 0,
-          },
-        });
-      }
-    },
-
-    play({ status }) {
-      if (status === "start" && !this.play_state.timer) {
-        // 只有第一次启动时才会添加定时器
-        this.play_state.timer = setInterval(() => {
-          //每刻执行一次
-          this.create_enemy(); //发起创建敌机请求
-          this.create_bullet(); //发起创建子弹请求
-          // 删除位移且删除已经离开边界的子弹
-          this.bullets = this.bullets.filter((item) => {
-            item.pos.y += -this.setting.bullet.single_shift; // ? 位移
-            item.collide = this.get_collide(item); // ? 每次移动更新碰撞位置
-            let hited = this.is_hit_enemy(item); // ? 判断当前子弹是否击中任意一架敌机
-            return (
-              //保留 未出边界 且 未击中敌机的 子弹
-              item.collide.top >= -this.setting.bullet.size.height && !hited
-            );
+    /**
+     * @description 设置每种对象的最大边界区域 x & y轴 在挂载时调用
+     */
+    set_max_reachable_area() {
+      let { left, right, top, bottom } = this.borderArea;
+      for (let item in this.permit_object) {
+        let { height, width } = this.setting[item].size;
+        if (this.permit_object[item]) {
+          this.max_reachable_area.push({
+            type: item,
+            pos: {
+              left: left - width,
+              right: right + width,
+              top: top - height,
+              bottom: bottom + height,
+            },
           });
-
-          this.enemies = this.enemies.filter((item) => {
-            item.pos.y += this.setting.enemy.single_shift; // ? 位移
-            item.collide = this.get_collide(item); // ? 每次移动更新碰撞位置
-            let hited = this.is_hit_own(item); // ? 判断是否击中己方
-
-            return (
-              item.collide.top <=
-                this.container.size.height + this.setting.enemy.size.height &&
-              !hited
-            );
-          });
-        }, this.play_state.interval);
-      } else if (status === "stop") {
-        clearTimeout(this.play_state.timer);
-        this.play_state.timer = null;
+        }
       }
     },
     /**
@@ -516,7 +495,7 @@ export default {
       return counter_x && counter_y;
     },
     /**
-     * @description 判断两个对象是否撞击
+     * @description 获得对象的碰撞体积
      * @param obj 拥有pos&size的对象
      */
     get_collide(obj) {
@@ -527,6 +506,136 @@ export default {
         right: obj.pos.x + obj.size.width,
       };
     },
+    /**
+     * @description 判断 对象 是否离开 最大可视区域
+     * @param obj 拥有pos&size的对象
+     */
+    is_leave({ obj, type }) {
+      const { collide: item } = obj;
+      let { left, right, top, bottom } = this.max_reachable_area.filter(
+        (e) => e.type === type
+      )[0].pos;
+      return (
+        item.top < top ||
+        item.bottom > bottom ||
+        item.left < left ||
+        item.right > right
+      );
+    },
+    // * 下方为运行逻辑
+    touchstart(e) {
+      this.mouse.con.left = e.offsetX;
+      this.mouse.con.right = this.plane.size.width - e.offsetX;
+      this.mouse.prev.pageX = e.pageX; //设置初始距离
+      let move = window.addEventListener("mousemove", this.plane_move);
+      // 抬起时注销事件
+      window.addEventListener("mouseup", (e) => {
+        window.removeEventListener("mousemove", this.plane_move);
+      });
+    },
+    // 开始移动
+    plane_move(e) {
+      //判断下一次移动是否接触边界
+      this.mouse.remove.x = e.pageX - this.mouse.prev.pageX; //设置移动的x距离
+      this.mouse.prev.pageX = e.pageX; //设置下一次相对的开始位置
+      this.plane.nextPos.x += this.mouse.remove.x; //将要移动到的距离
+      this.plane.pos.x = this.isNextEdge
+        ? this.plane.pos.x
+        : this.plane.nextPos.x;
+      // if (!this.isNextEdge) {
+      //   this.plane.pos.x = this.plane.nextPos.x;
+      // }
+    },
+    /**
+     * @description 创建子弹
+     * @require permit 是否允许增加
+     * @require beforeCreate 函数，基本用于添加请求次数
+     * @require magezine 弹夹，用于存放子弹数据
+     * @require setting 初始配置
+     */
+    create_bullet({ beforeCreate, permit, magezine, setting, pos }) {
+      // 每次创建子弹时发起请求
+      beforeCreate && beforeCreate();
+      // 当频率准许时创建新的子弹
+      if (permit) {
+        magezine.push({
+          ...setting,
+          pos,
+        });
+      }
+    },
+    create_enemy(position = "random") {
+      this.shootParam.enemy_side.request_total += 1;
+      // 当频率准许时创建新的敌机
+      if (this.permitCreateEnemy) {
+        this.enemies.push({
+          ...this.setting.enemy,
+          pos: {
+            x:
+              Math.floor(
+                Math.random() *
+                  (this.container.size.width - this.setting.enemy.size.width)
+              ) + 1,
+            y: 0,
+          },
+        });
+      }
+    },
+    play({ status }) {
+      if (status === "start" && !this.play_state.timer) {
+        // 只有第一次启动时才会添加定时器
+        this.play_state.timer = setInterval(() => {
+          //每刻执行一次
+          this.create_enemy(); //发起创建敌机请求
+          this.create_bullet({ ...this.create_bullet_param }); //发起创建子弹请求
+          // 移除  击中敌机||离开边界 的子弹
+          this.bullets = this.bullets.filter((item) => {
+            item.pos.y += -this.setting.bullet.single_shift; // ? 位移
+            item.collide = this.get_collide(item); // ? 每次移动更新碰撞位置
+            let hited = this.is_hit_enemy(item); // ? 判断当前子弹是否击中任意一架敌机 // ? 判断是否离开可视区域
+            return (
+              //保留 未出边界 且 未击中敌机的 子弹
+              !this.is_leave({ obj: item, type: "bullet" }) && !hited
+            );
+          });
+          // 移除 击中己方 || 离开边界 的敌机
+          this.enemies = this.enemies.filter((item) => {
+            // ? 创建敌方子弹
+            this.create_bullet({
+              beforeCreate: () => {
+                item.request_total += 1;
+                item.permitCreateBullet =
+                  item.request_total % item.frequency === 0;
+              },
+              permit: item.permitCreateBullet,
+              magezine: this.enemy_bullets,
+              setting: this.setting.enemy_bullet,
+              pos: {
+                x: item.pos.x + item.size.width / 2,
+                y: item.collide.bottom,
+              },
+            });
+            // ? 创建敌方子弹
+
+            item.pos.y += this.setting.enemy.single_shift; // ? 位移
+            item.collide = this.get_collide(item); // ? 每次移动更新碰撞位置
+            const hited = this.is_hit_own(item); // ? 判断是否击中己方
+            return !this.is_leave({ obj: item, type: "enemy" }) && !hited;
+          });
+          // 移除 击中己方 || 离开边界 的敌方子弹
+          this.enemy_bullets = this.enemy_bullets.filter((item) => {
+            item.pos.y += item.single_shift; // ? 位移
+            item.collide = this.get_collide(item); // ? 每次移动更新碰撞位置
+            const hited = this.is_hit_own(item); // ? 判断是否击中己方
+            return !this.is_leave({ obj: item, type: "enemy_bullet" }) && !hited;
+          });
+        }, this.play_state.interval);
+      } else if (status === "stop") {
+        clearTimeout(this.play_state.timer);
+        this.play_state.timer = null;
+      }
+    },
+
     is_hit_enemy(bullet) {
       let { pos, size, damage_amount } = bullet;
       let ifHit = false;
@@ -565,6 +674,7 @@ export default {
   },
   mounted() {
     this.bus.$emit("changeWorkBenchMainHeight", this.$refs.el.offsetHeight); //发送高度信息设置workbench渐变
+    this.set_max_reachable_area(); //设置每个移动对象的最大高度
     this.bus.$on("backComponentsMain", () => {
       this.play({ status: "stop" });
       this.scene = "plane";
@@ -581,10 +691,6 @@ export default {
 };
 </script>
 <style lang="stylus" scoped>
-// .control {
-// position: relative;
-// width: 200px;
-// }
 .container {
   position: relative;
   border: 1px solid red;
@@ -628,6 +734,15 @@ export default {
       position: absolute;
       top: 0px;
     }
+  }
+
+  .enemy-bullet {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: black;
   }
 }
 </style>
