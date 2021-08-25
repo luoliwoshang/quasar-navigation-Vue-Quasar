@@ -133,7 +133,36 @@
               />
             </div>
           </div>
-
+          <div class="row">
+            <div class="col">
+              <q-input
+                v-model="setting.enemy.frequency"
+                label="敌机射击频率 越大越慢"
+                filled
+                dense
+              />
+            </div>
+            <div class="col">
+              <q-slider v-model="setting.enemy.frequency" :min="1" :max="100" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <q-input
+                v-model="setting.enemy_bullet.single_shift"
+                label="敌机子弹单次移动距离"
+                filled
+                dense
+              />
+            </div>
+            <div class="col">
+              <q-slider
+                v-model="setting.enemy_bullet.single_shift"
+                :min="1"
+                :max="100"
+              />
+            </div>
+          </div>
           <q-separator />
         </div>
       </q-tab-panel>
@@ -159,10 +188,23 @@
               @click="scene = 'setting'"
             />
           </q-btn-group>
+          <q-btn-group rounded class="q-mt-sm text-center">
+            <q-btn size="sm" disabeld label="你的分数" />
+            <q-btn size="sm" disabeld :label="score" />
+          </q-btn-group>
+          <q-btn-group rounded class="q-mt-sm text-center">
+            <q-btn size="sm" disabeld :label="plane.hp">
+              <q-popup-edit auto-save :cover="false" v-model="plane.hp">
+                <q-input v-model="plane.hp" dense autofocus counter />
+              </q-popup-edit>
+            </q-btn>
+            <q-btn size="sm" disabeld label="HP" />
+          </q-btn-group>
         </div>
 
         <div class="container" :style="containerStyle">
           <div>
+            <boom></boom>
             <div
               class="plane"
               :style="planeStyle"
@@ -181,7 +223,6 @@
                 <use xlink:href="#icon-feiji"></use>
               </svg>
             </div>
-
             <div
               class="bullet"
               v-for="(bullet, index) in bullets"
@@ -230,12 +271,19 @@
 </template>
 
 <script>
+import boom from "./components/boom.vue";
 // * 子弹每秒行进速度=setting.bullet.single_shift * shootParam.interval
 export default {
   name: "plane",
+  components: {
+    boom,
+  },
   data() {
     return {
-      scene: "plane", //setting 为设置
+      // 场景data
+      scene: "plane",
+      score: 0,
+      //游戏逻辑data
       play_state: {
         timer: null, //存放全局的单位时间 定时器
         interval: 20, //n ms子弹会行进一次
@@ -323,7 +371,7 @@ export default {
             height: 10,
           },
           single_shift: 10,
-          damage_amount:40
+          damage_amount: 40,
         },
       },
       plane: {
@@ -450,7 +498,6 @@ export default {
   },
   methods: {
     // * 下方为工具类函数
-
     /**
      * @description 设置每种对象的最大边界区域 x & y轴 在挂载时调用
      */
@@ -521,6 +568,13 @@ export default {
         item.left < left ||
         item.right > right
       );
+    },
+    /**
+     * @description 开始爆炸
+     * @param obj x y
+     */
+    boom(pos) {
+      this.bus.$emit("boom", pos);
     },
     // * 下方为运行逻辑
     touchstart(e) {
@@ -627,7 +681,9 @@ export default {
             item.pos.y += item.single_shift; // ? 位移
             item.collide = this.get_collide(item); // ? 每次移动更新碰撞位置
             const hited = this.is_hit_own(item); // ? 判断是否击中己方
-            return !this.is_leave({ obj: item, type: "enemy_bullet" }) && !hited;
+            return (
+              !this.is_leave({ obj: item, type: "enemy_bullet" }) && !hited
+            );
           });
         }, this.play_state.interval);
       } else if (status === "stop") {
@@ -635,7 +691,6 @@ export default {
         this.play_state.timer = null;
       }
     },
-
     is_hit_enemy(bullet) {
       let { pos, size, damage_amount } = bullet;
       let ifHit = false;
@@ -645,6 +700,9 @@ export default {
         if (this.is_impact({ objA: bullet, objB: enemy })) {
           // 子弹碰到敌机扣除子弹的伤害对应的hp
           ifHit = true; //击中状态
+          if (enemy.hp - damage_amount <= 0) {
+            this.shoot_down(enemy);
+          }
           return (enemy.hp -= damage_amount) > 0;
         } else {
           //没有碰到敌机
@@ -662,14 +720,12 @@ export default {
       });
       if (isHit) {
         this.plane.hp -= enemy.damage_amount;
-        if (this.plane.hp <= 0) {
-          this.$q.notify({
-            type: "negative",
-            message: `你已经die了`,
-          });
-        }
       }
       return isHit; //返回是否击中己方
+    },
+    shoot_down(obj) {
+      this.boom(obj.pos);
+      this.score += 1;
     },
   },
   mounted() {
@@ -687,6 +743,15 @@ export default {
         this.bus.$emit("changeWorkBenchMainHeight", this.$refs.el.offsetHeight); //发送高度信息设置workbench渐变
       });
     },
+    "plane.hp": function (hp) {
+      if (hp <= 0) {
+        this.$q.notify({
+          type: "info",
+          message: `你已经die了`,
+          position: "top",
+        });
+      }
+    },
   },
 };
 </script>
@@ -695,6 +760,7 @@ export default {
   position: relative;
   border: 1px solid red;
   overflow: hidden;
+  user-select: none;
 
   .plane {
     cursor: pointer;
