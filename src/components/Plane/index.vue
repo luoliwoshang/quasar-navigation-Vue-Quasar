@@ -290,19 +290,8 @@ export default {
         processing: false, //是否进行中
       },
       mouse: {
+        is_operate: false, //是否为鼠标操作，非鼠标操作时通过判断此属性决定是否需要过渡效果
         prev: { pageX: 0 }, //上次事件滑动距离
-
-        // 鼠标离plane容器的距离
-        con: {
-          left: 0,
-          right: 0,
-        },
-        cur: {
-          pageX: 0,
-        },
-        remove: {
-          x: 0,
-        },
       },
       container: {
         pos: {
@@ -440,6 +429,7 @@ export default {
         top: this.plane.pos.y + "px",
         width: this.plane.size.width + "px",
         height: this.plane.size.height + "px",
+        transition: this.mouse.is_operate?'0s':'.3s',
       };
     },
     // 边界
@@ -578,27 +568,30 @@ export default {
     },
     // * 下方为运行逻辑
     touchstart(e) {
-      this.mouse.con.left = e.offsetX;
-      this.mouse.con.right = this.plane.size.width - e.offsetX;
+      this.mouse.is_operate = true; //设置为鼠标操作
       this.mouse.prev.pageX = e.pageX; //设置初始距离
-      let move = window.addEventListener("mousemove", this.plane_move);
+      let move = window.addEventListener("mousemove", this.mouse_move);
       // 抬起时注销事件
       window.addEventListener("mouseup", (e) => {
-        window.removeEventListener("mousemove", this.plane_move);
+        window.removeEventListener("mousemove", this.mouse_move);
       });
     },
-    // 开始移动
-    plane_move(e) {
-      //判断下一次移动是否接触边界
-      this.mouse.remove.x = e.pageX - this.mouse.prev.pageX; //设置移动的x距离
+    mouse_move(e) {
+      let mouse_move_distance = e.pageX - this.mouse.prev.pageX; //获得移动距离
       this.mouse.prev.pageX = e.pageX; //设置下一次相对的开始位置
-      this.plane.nextPos.x += this.mouse.remove.x; //将要移动到的距离
-      this.plane.pos.x = this.isNextEdge
-        ? this.plane.pos.x
-        : this.plane.nextPos.x;
-      // if (!this.isNextEdge) {
-      //   this.plane.pos.x = this.plane.nextPos.x;
-      // }
+      this.plane_move(mouse_move_distance);
+    },
+    key_move({ code }) {
+      this.mouse.is_operate = false; //设置为非鼠标操作
+      if (code === "ArrowLeft") {
+        this.plane_move(-30);
+      } else if (code === "ArrowRight") {
+        this.plane_move(30);
+      }
+    },
+    // 开始移动
+    plane_move(x) {
+      this.plane.pos.x += x; //设置移动
     },
     /**
      * @description 创建子弹
@@ -735,6 +728,10 @@ export default {
       this.play({ status: "stop" });
       this.scene = "plane";
     });
+    window.addEventListener("keydown", this.key_move);
+  },
+  beforeDestroy() {
+    window.removeEventListener("keydown", this.key_move);
   },
   watch: {
     scene() {
@@ -750,6 +747,16 @@ export default {
           message: `你已经die了`,
           position: "top",
         });
+      }
+    },
+    "plane.pos.x": function (x) {
+      let max_right = this.container.size.width - this.plane.size.width;
+      if (x < 0) {
+        console.log(x);
+        this.plane.pos.x = 0;
+      }
+      if (x > max_right) {
+        this.plane.pos.x = max_right;
       }
     },
   },

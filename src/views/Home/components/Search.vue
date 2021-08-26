@@ -1,25 +1,44 @@
 <template>
-  <div>
+  <div class="search">
     <div class="search-img" flex-center>
       <q-carousel
         swipeable
         style="background: transparent"
         :style="{ opacity }"
         height="100%"
-        arrows
         animated
         infinite
         transition-prev="scale"
         transition-next="scale"
-        control-color="primary"
         class="rounded-borders"
+        ref="carousel"
         v-model="slide"
-        @transition="
+        @before-transition="
           (e) => {
             changeSearchMethod(e);
           }
         "
       >
+        <template v-slot:control>
+          <q-carousel-control
+            position="top-left"
+            :offset="[18, 18]"
+            class="q-gutter-xs control"
+          >
+            <q-btn
+              push
+              dense
+              :color="currentSearch === 'baidu' ? 'blue' : 'orange'"
+              :text-color="currentSearch === 'baidu' ? 'white' : 'white'"
+              :icon="currentSearch === 'baidu' ? 'shopping_cart' : 'search'"
+              @click="$refs.carousel.next()"
+            >
+              <div class="q-ml-sm">
+                {{ currentSearch === "baidu" ? "淘宝搜索" : "百度搜索" }}
+              </div>
+            </q-btn>
+          </q-carousel-control>
+        </template>
         <q-carousel-slide name="baidu" class="column no-wrap flex-center">
           <img src="../../../assets/imgs/baidu.png" />
         </q-carousel-slide>
@@ -197,34 +216,65 @@ export default {
 <style lang="stylus" scoped="scoped">
 @import '../../../assets/style/color.styl';
 
-.search-img {
-  width: 100%;
-  height: 200px;
+.search {
+  &:hover {
+    .search-img {
+      .control {
+        opacity: 1;
+      }
+    }
+  }
 
-  img {
-    display: block;
+  .search-img {
+    width: 100%;
     height: 200px;
-    margin: 0 auto;
+
+    .control {
+      opacity: 0;
+      transition: 0.3s;
+    }
+
+    img {
+      display: block;
+      height: 200px;
+      margin: 0 auto;
+    }
+  }
+
+  .search-box {
+    margin-top: 20px;
+    position: relative;
+
+    .q-input {
+    }
+
+    .search-content {
+      position: absolute;
+      z-index: 9;
+      width: 100%;
+
+      .q-card {
+        cursor: pointer;
+
+        &:hover, &.active {
+          background-color: $main-color;
+        }
+      }
+    }
   }
 }
 
-.search-box {
-  margin-top: 20px;
-  position: relative;
-
-  .q-input {
+.search-img {
+  img {
   }
+}
 
-  .search-content {
-    position: absolute;
-    z-index: 9;
-    width: 100%;
-
-    .q-card {
-      cursor: pointer;
-
-      &:hover, &.active {
-        background-color: $main-color;
+@media screen and (max-width: 768px) {
+  .search {
+    .search-img {
+      img {
+        width: 100%;
+        height: auto;
       }
     }
   }

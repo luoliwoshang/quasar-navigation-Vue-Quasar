@@ -1,15 +1,10 @@
 <template>
+<div ref="el">
   <q-card  class="card no-border-radius">
     <form @submit.prevent.stop="onSubmit" class="q-gutter-md">
       <q-item>
         <q-card-section class="q-pb-none">
-          <q-btn
-            flat
-            round
-            size="lg"
-            style="color: #ffffff"
-            icon="image"
-          />
+          <q-btn flat round size="lg" style="color: #ffffff" icon="image" />
         </q-card-section>
         <q-card-section class="q-mt-md q-pt-none q-pa-none">
           <div>
@@ -36,13 +31,15 @@
           type="submit"
           push
           color="deep-purple-3"
-          label="查询"
+          label="确认设置"
           class="full-width"
           size="lg"
         />
       </q-card-actions>
     </form>
   </q-card>
+</div>
+
 </template>
 
 <script>
@@ -80,12 +77,19 @@ export default {
       }
     },
   },
+  mounted() {
+    console.log(this.$refs.el.offsetHeight + "px")
+    this.bus.$emit(
+      "changeWorkBenchMainHeight",
+      this.$refs.el.offsetHeight 
+    );
+  },
 };
 </script>
 
 <style lang="stylus" scoped>
 .card {
-  background-image: linear-gradient( 135deg, #FF7AF5 10%, #513162 100%);
-  min-height 100%
+  background-image: linear-gradient(135deg, #FF7AF5 10%, #513162 100%);
+  min-height: 100%;
 }
 </style>
