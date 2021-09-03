@@ -40,7 +40,7 @@ export default new Router({
 		}, {
 			path: 'test',
 			name: 'test',
-			component: () => import('../components/Plane/index.vue')
+			component: () => import('../views/About.vue')
 		}]
 	}]
 })
