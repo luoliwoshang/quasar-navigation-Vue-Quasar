@@ -127,7 +127,7 @@
                             <q-slider
                               class="q-ml-sm"
                               @input="handleOpacity"
-                              v-model="module.set_opacity.value"
+                              :value="opacity"
                               :step="0.01"
                               label
                               :min="0"

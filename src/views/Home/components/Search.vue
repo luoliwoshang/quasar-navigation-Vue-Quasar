@@ -47,52 +47,82 @@
         </q-carousel-slide>
       </q-carousel>
     </div>
-    <div class="search-box">
-      <q-input
-        v-model="wd"
-        clearable
-        class="text-h5"
-        :outlined="!!!wd"
-        :filled="!!wd"
-        bg-color="cyan-1"
-        rounded
-        :style="{ opacity }"
-        @blur="hideSearchContent"
-        @focus="showSearchContent = true"
-        placeholder="请输入内容"
-        @input="onInput"
-        @keydown.40.native="nextOption"
-        @keydown.38.native="lastOption"
-        @keydown.13.native="submit"
-      />
-      <div
-        class="search-content"
-        v-show="showSearchContent"
-        :style="{ opacity }"
-      >
-        <q-card
-          square
-          v-for="(item, idx) in arr"
-          :key="idx"
-          :data-content="item"
-          :data-id="idx"
-          @click="itemClick($event)"
-          :class="idx == index ? 'active' : ''"
+    <div class="search-container">
+      <div class="baidu-search">
+        <q-input
+          v-model="wd"
+          clearable
+          class="text-h5"
+          :outlined="!!!wd"
+          :filled="!!wd"
+          bg-color="cyan-1"
+          rounded
+          :style="{ opacity }"
+          @blur="hideSearchContent"
+          @focus="showSearchContent = true"
+          placeholder="请输入内容"
+          @input="onInput"
+          @keydown.40.native="nextOption"
+          @keydown.38.native="lastOption"
+          @keydown.13.native="submit"
+          @keydown.ctrl.67="copy_translate_result"
+          @keydown.meta.67="copy_translate_result"
+        />
+        <div
+          class="search-content"
+          v-show="showSearchContent"
+          :style="{ opacity }"
         >
-          <q-card-section class="text-primary">
-            <div class="text-h6">{{ item }}</div>
-          </q-card-section>
-        </q-card>
+          <q-card
+            square
+            v-for="(item, idx) in arr"
+            :key="idx"
+            :data-content="item"
+            :data-id="idx"
+            @click="itemClick($event)"
+            :class="idx == index ? 'active' : ''"
+          >
+            <q-card-section class="text-primary">
+              <div class="text-h6">{{ item }}</div>
+            </q-card-section>
+          </q-card>
+        </div>
+      </div>
+      <div
+        class="translate-search q-ml-md"
+        :style="{
+          width: translate_result.length > 10 ? '20%' : '10%',
+        }"
+      >
+        <q-input
+          v-model="translate_result"
+          rounded
+          outlined
+          placeholder="翻译结果"
+          :disable="!translate_result"
+        >
+          <template v-slot:append>
+            <q-icon name="content_copy" @click="copy_translate_result">
+              <q-tooltip :value="!!translate_result" anchor="center right" self="center left"> ctrl+c </q-tooltip>
+            </q-icon>
+          </template>
+        </q-input>
       </div>
     </div>
   </div>
 </template>
 <script>
 import $ from "jquery";
+import md5 from "js-md5";
+import Api from "../../../api/api";
 export default {
   name: "Search",
   data() {
     return {
+      timer: {
+        translate: null, //节流定时器
+      },
+      translate_result: "",
       slide: "baidu", //图片切换
       lorem: "test", //测试文字
       wd: "", //搜索内容
@@ -122,18 +152,24 @@ export default {
       }
       this.wd = this.arr[this.index];
     },
+    wd(val) {
+      if (val.length === 0) {
+        this.translate_result = "";
+        this.arr = [];
+      }
+    },
   },
   methods: {
     hideSearchContent() {
       setTimeout(() => {
+        this.arr = [];
         this.showSearchContent = false;
       }, 150);
     },
     onInput() {
       if (!!this.wd) {
-        this.getData(); //开始请求数据
-      } else {
-        this.arr = [];
+        this.getData(); //开始请求百度搜索候选栏
+        this.translate(); //百度翻译
       }
     },
     nextOption(event) {
@@ -202,12 +238,41 @@ export default {
       console.log(e);
       this.currentSearch = e;
     },
+    translate() {
+      let query = this.wd;
+      if (this.timer.translate) {
+        clearTimeout(this.timer.translate);
+      }
+      this.timer.translate = setTimeout(() => {
+        let appid = "20201013000588468";
+        let key = "S31B040thI1pprUuNIXM";
+        let salt = new Date().getTime();
+        Api.translate({
+          q: query,
+          appid,
+          salt,
+          from: "zh",
+          to: "en",
+          sign: md5(appid + query + salt + key),
+        }).then((res) => {
+          console.log(res);
+          let { trans_result } = res;
+          this.translate_result = trans_result[0].dst;
+          this.timer.translate = null;
+        });
+      }, 500);
+    },
+    copy_translate_result() {
+      this.$copyText(this.translate_result);
+      this.$q.notify({ color: "orange-6", message: "复制成功" });
+      this.wd = "";
+      this.translate_result = "";
+    },
   },
   mounted() {
     window.addEventListener("blur", () => {
       document.title = "导航在这里哦 Navigation";
       this.wd = "";
-      this.showSearchContent = false;
     });
   },
 };
@@ -217,8 +282,8 @@ export default {
 @import '../../../assets/style/color.styl';
 
 .search {
-  &:hover {
-    .search-img {
+  .search-img {
+    &:hover {
       .control {
         opacity: 1;
       }
@@ -241,31 +306,36 @@ export default {
     }
   }
 
-  .search-box {
-    margin-top: 20px;
-    position: relative;
+  .search-container {
+    display: flex;
+    height: 56px;
+    margin-top: 10px;
 
-    .q-input {
-    }
+    .baidu-search {
+      flex: 1;
+      position: relative;
+      transition: 0.3s;
 
-    .search-content {
-      position: absolute;
-      z-index: 9;
-      width: 100%;
+      .search-content {
+        position: absolute;
+        z-index: 9;
+        width: 100%;
 
-      .q-card {
-        cursor: pointer;
+        .q-card {
+          cursor: pointer;
 
-        &:hover, &.active {
-          background-color: $main-color;
+          &:hover, &.active {
+            background-color: $main-color;
+          }
         }
       }
     }
-  }
-}
 
-.search-img {
-  img {
+    .translate-search {
+      height: 100%;
+      transition: 0.3s;
+      padding: 0;
+    }
   }
 }
 
