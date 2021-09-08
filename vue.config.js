@@ -29,12 +29,11 @@ module.exports = {
 			},
 			'/translate': {
 				target: 'http://api.fanyi.baidu.com/api/trans/vip/translate',
-				changOrigin: true,  
+				changOrigin: true,
 				pathRewrite: {
 					'^/translate': ''
 				}
-			},
-
+			}
 		}
 	}
 }

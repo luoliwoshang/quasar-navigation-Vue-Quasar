@@ -103,7 +103,13 @@
         >
           <template v-slot:append>
             <q-icon name="content_copy" @click="copy_translate_result">
-              <q-tooltip :value="!!translate_result" anchor="center right" self="center left"> ctrl+c </q-tooltip>
+              <q-tooltip
+                :value="!!translate_result"
+                anchor="center right"
+                self="center left"
+              >
+                ctrl+c
+              </q-tooltip>
             </q-icon>
           </template>
         </q-input>
@@ -180,31 +186,7 @@ export default {
       // 按的下键
       this.index = this.index - 1;
     },
-    getData() {
-      if (this.currentSearch === "baidu") {
-        $.ajax({
-          method: "post",
-          url: this.search_baidu,
-          data: {
-            wd: this.wd,
-          }, //文本框中的值
-          jsonpCallback: "sr", //百度的回调函数
-          dataType: "jsonp", //跨域
-        }).done((data) => {
-          this.getDataSuccess(data);
-        });
-      } else {
-        $.ajax({
-          method: "post",
-          url: this.search_taobao + this.wd,
-          dataType: "jsonp",
-        }).done((data) => {
-          this.getDataSuccess(data);
-        });
-      }
-    },
-    getDataSuccess(data) {
-      // 不同的需要过滤
+    render_candidate(data) {
       if (this.currentSearch === "baidu") {
         this.arr = data.s;
       } else if (this.currentSearch === "taobao") {
@@ -213,6 +195,38 @@ export default {
           newdata[index] = item[0];
         });
         this.arr = newdata;
+      }
+    },
+    getData() {
+      let _this = this;
+      switch (this.currentSearch) {
+        case "baidu":
+          Api.searchBaidu({
+            wd: this.wd,
+            callback_name: "callback_method",
+            callback_method: this.render_candidate,
+          }).then((res) => {
+            eval(res);
+          });
+          break;
+        case "taobao":
+          // Api.searchTaobao({
+          //   q: this.wd,
+          //   callback_name: "callback_method",
+          //   callback_method: this.render_candidate,
+          // }).then((res) => {
+          //   eval(res)
+          // });
+          $.ajax({
+            method: "post",
+            url: this.search_taobao + this.wd,
+            dataType: "jsonp",
+          }).done((data) => {
+            this.render_candidate(data);
+          });
+          break;
+        default:
+          break;
       }
     },
     itemClick(event) {
@@ -235,7 +249,6 @@ export default {
     },
     changeSearchMethod(e) {
       // 改变了搜索内容
-      console.log(e);
       this.currentSearch = e;
     },
     translate() {
