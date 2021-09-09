@@ -50,11 +50,11 @@
     <div class="search-container">
       <div class="baidu-search">
         <q-input
-          v-model="wd"
+          v-model="search_input"
           clearable
           class="text-h5"
-          :outlined="!!!wd"
-          :filled="!!wd"
+          :outlined="!!!search_input"
+          :filled="!!search_input"
           bg-color="cyan-1"
           rounded
           :style="{ opacity }"
@@ -118,7 +118,6 @@
   </div>
 </template>
 <script>
-import $ from "jquery";
 import md5 from "js-md5";
 import Api from "../../../api/api";
 export default {
@@ -130,16 +129,11 @@ export default {
       },
       translate_result: "",
       slide: "baidu", //图片切换
-      lorem: "test", //测试文字
-      wd: "", //搜索内容
+      search_input: "", //搜索内容
       arr: [], //搜索后结果
       index: -1, //当前选中项
       showSearchContent: true, //是否显示搜索后选框
       currentSearch: "baidu", //当前搜索方式baidu/taobao
-      search_baidu:
-        "https://sp0.baidu.com/5a1Fazu8AA54nxGko9WTAnF6hhy/su?cb=sr", //百度的请求
-      search_taobao:
-        "https://suggest.taobao.com/sug?code=utf-8&_ksTS=1594451639078_2581&callback=jsonp2582&k=1&area=c2c&bucketid=1&q=", //淘宝请求
     };
   },
   props: ["opacity"],
@@ -156,9 +150,10 @@ export default {
       } else if (this.index <= -1) {
         this.index = -1;
       }
-      this.wd = this.arr[this.index];
+      this.search_input = this.arr[this.index];
     },
-    wd(val) {
+    search_input(val) {
+      var val = val || "";
       if (val.length === 0) {
         this.translate_result = "";
         this.arr = [];
@@ -173,7 +168,7 @@ export default {
       }, 150);
     },
     onInput() {
-      if (!!this.wd) {
+      if (!!this.search_input) {
         this.getData(); //开始请求百度搜索候选栏
         this.translate(); //百度翻译
       }
@@ -198,31 +193,17 @@ export default {
       }
     },
     getData() {
-      let _this = this;
       switch (this.currentSearch) {
         case "baidu":
           Api.searchBaidu({
-            wd: this.wd,
-            callback_name: "callback_method",
+            wd: this.search_input,
             callback_method: this.render_candidate,
-          }).then((res) => {
-            eval(res);
           });
           break;
         case "taobao":
-          // Api.searchTaobao({
-          //   q: this.wd,
-          //   callback_name: "callback_method",
-          //   callback_method: this.render_candidate,
-          // }).then((res) => {
-          //   eval(res)
-          // });
-          $.ajax({
-            method: "post",
-            url: this.search_taobao + this.wd,
-            dataType: "jsonp",
-          }).done((data) => {
-            this.render_candidate(data);
+          Api.searchTaobao({
+            q: this.search_input,
+            callback_method: this.render_candidate,
           });
           break;
         default:
@@ -242,9 +223,9 @@ export default {
     },
     submit() {
       if (this.currentSearch === "baidu") {
-        window.open("https://www.baidu.com/s?wd=" + this.wd);
+        window.open("https://www.baidu.com/s?wd=" + this.search_input);
       } else if (this.currentSearch === "taobao") {
-        window.open("https://s.taobao.com/search?q=" + this.wd);
+        window.open("https://s.taobao.com/search?q=" + this.search_input);
       }
     },
     changeSearchMethod(e) {
@@ -252,7 +233,7 @@ export default {
       this.currentSearch = e;
     },
     translate() {
-      let query = this.wd;
+      let query = this.search_input;
       if (this.timer.translate) {
         clearTimeout(this.timer.translate);
       }
@@ -268,12 +249,11 @@ export default {
           to: "en",
           sign: md5(appid + query + salt + key),
         }).then((res) => {
-          console.log(res);
-          let { trans_result } = res;
-          this.translate_result = trans_result[0].dst;
+          let { trans_result, error_code } = res;
+          this.translate_result = trans_result[0]?.dst || "访问过快";
           this.timer.translate = null;
         });
-      }, 500);
+      }, 700);
     },
     copy_translate_result() {
       this.$copyText(this.translate_result);
@@ -285,7 +265,7 @@ export default {
   mounted() {
     window.addEventListener("blur", () => {
       document.title = "导航在这里哦 Navigation";
-      this.wd = "";
+      this.search_input = "";
     });
   },
 };

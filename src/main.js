@@ -11,7 +11,8 @@ Vue.use(VueParticles)
 Vue.prototype.axios = axios;
 import VueClipboard from 'vue-clipboard2'
 Vue.use(VueClipboard)
-
+import {VueJsonp} from 'vue-jsonp'
+Vue.use(VueJsonp)
 
 import '@/icon/iconfont.css'
 import '@/icon/iconfont.js'

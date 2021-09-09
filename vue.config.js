@@ -27,13 +27,13 @@ module.exports = {
 					'^/api': ''
 				}
 			},
-			'/translate': {
-				target: 'http://api.fanyi.baidu.com/api/trans/vip/translate',
-				changOrigin: true,
-				pathRewrite: {
-					'^/translate': ''
-				}
-			}
+			// '/translate': {
+			// 	target: 'http://api.fanyi.baidu.com/api/trans/vip/translate',
+			// 	changOrigin: true,
+			// 	pathRewrite: {
+			// 		'^/translate': ''
+			// 	}
+			// }
 		}
 	}
 }
