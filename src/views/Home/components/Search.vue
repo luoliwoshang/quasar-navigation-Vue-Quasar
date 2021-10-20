@@ -4,7 +4,6 @@
       <q-carousel
         swipeable
         style="background: transparent"
-        :style="{ opacity }"
         height="100%"
         animated
         infinite
@@ -28,7 +27,7 @@
             <q-btn
               push
               dense
-              :color="currentSearch === 'baidu' ? 'blue' : 'orange'"
+              class="search_method_btn"
               :text-color="currentSearch === 'baidu' ? 'white' : 'white'"
               :icon="currentSearch === 'baidu' ? 'shopping_cart' : 'search'"
               @click="$refs.carousel.next()"
@@ -52,12 +51,10 @@
         <q-input
           v-model="search_input"
           clearable
-          class="text-h5"
+          class="text-h5 search_input"
           :outlined="!!!search_input"
           :filled="!!search_input"
-          bg-color="cyan-1"
           rounded
-          :style="{ opacity }"
           @blur="hideSearchContent"
           @focus="showSearchContent = true"
           placeholder="请输入内容"
@@ -68,11 +65,7 @@
           @keydown.ctrl.67="copy_translate_result"
           @keydown.meta.67="copy_translate_result"
         />
-        <div
-          class="search-content"
-          v-show="showSearchContent"
-          :style="{ opacity }"
-        >
+        <div class="search-content" v-show="showSearchContent">
           <q-card
             square
             v-for="(item, idx) in arr"
@@ -95,6 +88,7 @@
         }"
       >
         <q-input
+          class="translate-input"
           v-model="translate_result"
           rounded
           outlined
@@ -136,7 +130,6 @@ export default {
       currentSearch: "baidu", //当前搜索方式baidu/taobao
     };
   },
-  props: ["opacity"],
   computed: {
     hasContent() {
       return this.arr.length > 0;
@@ -272,8 +265,6 @@ export default {
 </script>
 
 <style lang="stylus" scoped="scoped">
-@import '../../../assets/style/color.styl';
-
 .search {
   .search-img {
     &:hover {
@@ -290,12 +281,18 @@ export default {
     .control {
       opacity: 0;
       transition: 0.3s;
+
+      .search_method_btn {
+        background-color: var(--main-color-1);
+        opacity: var(--main-opacity);
+      }
     }
 
     img {
       display: block;
       height: 200px;
       margin: 0 auto;
+      opacity: var(--main-opacity);
     }
   }
 
@@ -303,6 +300,26 @@ export default {
     display: flex;
     height: 56px;
     margin-top: 10px;
+
+    ::v-deep .q-input {
+      opacity: var(--main-opacity);
+
+      .q-field__control {
+        background-color: var(--input-background-color);
+
+        input {
+          color: var(--input-font-color);
+        }
+      }
+
+      .q-field__control:before {
+        border: var(--input-border);
+      }
+    }
+
+    ::v-deep .material-icons {
+      color: var(--input-font-color);
+    }
 
     .baidu-search {
       flex: 1;
@@ -316,9 +333,11 @@ export default {
 
         .q-card {
           cursor: pointer;
+          background-color: var(--default-background-color);
+          opacity: var(--main-opacity);
 
           &:hover, &.active {
-            background-color: $main-color;
+            background-color: var(--main-color-3);
           }
         }
       }

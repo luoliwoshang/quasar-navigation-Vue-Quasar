@@ -2,7 +2,6 @@
 	<div class="container">
 		<div  class="row">
 			<div 
-			:style="{opacity}"
 			class="col-4 col-lg-4 col-md-6 col-xs-12"
 			v-for="(item,index) in navs"
 			:key="index">
@@ -34,7 +33,7 @@
 								:data-v_id="index" @click="handleChangeColorClick" >
 								<q-tooltip  anchor="top middle" self="bottom middle" >修改文字颜色</q-tooltip>
 								</q-fab-action>
-								
+
 						</q-fab>
 					</q-card-actions>
 					<q-card-section class="text-h2 text-center" >
@@ -56,7 +55,7 @@
 				</q-card-actions>
 			</q-card>
 		</q-dialog>
-		
+
 		<!-- 网站名称 -->
 		<q-dialog v-model="showChangeName">
 			<q-card style="min-width: 350px">
@@ -70,7 +69,7 @@
 				</q-card-actions>
 			</q-card>
 		</q-dialog>
-		
+
 		<!-- 背景颜色 -->
 		<q-dialog v-model="showChangeBackgroundColor">
 			<q-card>
@@ -90,7 +89,7 @@
 				</q-card-actions>
 			</q-card>
 		</q-dialog>
-		
+
 		<!-- 文字颜色 -->
 		<q-dialog v-model="showChangeColor">
 			<q-card>
@@ -112,7 +111,7 @@
 <script>
 import { mapState, mapMutations } from "vuex";
 import { Dialog } from "quasar";
-import vuedraggable from 'vuedraggable';//拖拽
+import vuedraggable from "vuedraggable"; //拖拽
 export default {
   name: "navCard",
   data() {
@@ -130,9 +129,8 @@ export default {
       tooltipShow: false, //是否显示当前卡片的工具
     };
   },
-  props: ["opacity"],
   computed: {
-    ...mapState("moduleNav", ["navs"])
+    ...mapState("moduleNav", ["navs"]),
   },
   methods: {
     ...mapMutations("moduleNav", ["CHANGE_NAV_FEATURE", "DELETE_NAV"]),
@@ -181,9 +179,9 @@ export default {
 @import '../../../assets/style/common.css';
 
 .container {
+  opacity: var(--main-opacity);
   .col-4 {
     margin-top: 50px;
-
     .q-card {
       margin: 0 auto;
       position: relative;

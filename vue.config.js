@@ -27,13 +27,14 @@ module.exports = {
 					'^/api': ''
 				}
 			},
-			// '/translate': {
-			// 	target: 'http://api.fanyi.baidu.com/api/trans/vip/translate',
-			// 	changOrigin: true,
-			// 	pathRewrite: {
-			// 		'^/translate': ''
-			// 	}
-			// }
+
+		}
+	},
+	css: {
+		loaderOptions: {
+			stylus: {
+				import: '~@/assets/style/theme.styl'
+			}
 		}
 	}
 }

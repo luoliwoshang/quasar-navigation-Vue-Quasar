@@ -1,8 +1,12 @@
 <template>
   <div class="home" :style="style">
-    <Search :opacity="opacity"></Search>
-    <navCard :opacity="opacity"></navCard>
-    <Workbench></Workbench>
+    <div class="mask">
+      <div class="content">
+        <Search :opacity="opacity"></Search>
+        <navCard :opacity="opacity"></navCard>
+        <Workbench></Workbench>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -46,12 +50,23 @@ export default {
   },
 };
 </script>
-<style scoped="scoped">
+<style scoped="scoped" lang="stylus">
 .home {
-  padding: 0 14%;
   background-origin: border-box;
   background-attachment: fixed;
   min-height: 100vh;
   background-size: 100%;
+  box-sizing: border-box;
+  .mask {
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    transition: var(--change-transition-time)
+    background-color: var(--mask-color);
+    .content {
+      padding: 0 14%;
+      height: 100%;
+    }
+  }
 }
 </style>

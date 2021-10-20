@@ -24,7 +24,7 @@
     "@vue/cli-plugin-router": "~4.5.0",
     "@vue/cli-plugin-vuex": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
-    "stylus": "^0.54.7",
+    "stylus": "^0.54.8",
     "stylus-loader": "^3.0.2",
     "vue-cli-plugin-quasar": "~3.0.2",
     "vue-jsonp": "^2.0.0",

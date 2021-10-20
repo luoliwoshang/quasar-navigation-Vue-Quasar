@@ -8,7 +8,7 @@
     >
       <div class="q-ma-lg">
         <div class="rounded-borders workbench">
-          <q-bar dark class="bg-primary text-white">
+          <q-bar dark class="header">
             <q-btn
               dense
               flat
@@ -42,17 +42,27 @@
             >
               <q-tooltip>返回组件主要场景</q-tooltip>
             </q-btn>
-            <div class="col text-center text-weight-bold">Workbench</div>
+            <div class="col row">
+              <div class="col-8 text-center text-weight-bold flex items-center">
+                Workbench
+              </div>
+              <div class="col-4">
+                <q-toggle
+                  v-model="is_night_mode"
+                  :icon="is_night_mode ? 'brightness_3' : 'brightness_5'"
+                />
+              </div>
+            </div>
           </q-bar>
-          <div class="container" ref="container" :style="mainStyle">  
-            <q-tab-panels v-model="tab" animated >
+          <div class="container" ref="container" :style="mainStyle">
+            <q-tab-panels v-model="tab" animated>
               <q-tab-panel name="main" class="q-pa-none">
                 <q-card class="no-border-radius q-pa-none">
                   <q-card-section class="q-pa-none">
                     <div class="card-wrap">
                       <div class="row q-gutter-sm q-mt-none">
                         <div class="col">
-                          <q-card class="fit column bg-grey-3">
+                          <q-card class="fit column first-card">
                             <q-btn
                               class="col"
                               flat
@@ -60,7 +70,7 @@
                               @click="handleReorder"
                             >
                               <div class="q-gutter-x-xs">
-                                <q-icon class="text-primary" name="sort" />
+                                <q-icon name="sort" />
                                 <span>卡片顺序</span>
                               </div>
                             </q-btn>
@@ -71,7 +81,7 @@
                               @click="handleSetBackground"
                             >
                               <div class="q-gutter-x-xs">
-                                <q-icon class="text-primary" name="image" />
+                                <q-icon name="image" />
                                 <span>设置背景</span>
                               </div>
                             </q-btn>
@@ -82,7 +92,7 @@
                               @click="handleNewNavigation"
                             >
                               <div class="q-gutter-x-xs">
-                                <q-icon class="text-primary" name="add" />
+                                <q-icon name="add" />
                                 <span>添加导航</span>
                               </div>
                             </q-btn>
@@ -92,8 +102,7 @@
                           <div class="fit">
                             <div class="column full-height">
                               <q-btn
-                                class="col q-mb-sm"
-                                color="primary"
+                                class="express-btn col q-mb-sm"
                                 @click="express"
                               >
                                 <q-icon name="mail"></q-icon
@@ -138,30 +147,25 @@
                       </div>
                       <div class="row q-gutter-sm q-my-sm">
                         <div class="col q-mt-none">
-                          <q-card class="fit column bg-yellow-1">
-                            <q-btn
-                              class="col"
-                              flat
-                              color="cyan"
-                              @click="handlePlane"
-                            >
+                          <q-card class="fit column second-card">
+                            <q-btn class="col" flat @click="handlePlane">
                               <div class="q-gutter-x-xs">
-                                <q-icon class="text-pink-2" name="flight" />
-                                <span class="text-pink-2">飞机小战</span>
+                                <q-icon name="flight" />
+                                <span>飞机小战</span>
                               </div>
                             </q-btn>
                             <q-btn class="col" flat color="cyan">
                               <div class="q-gutter-x-xs">
-                                <q-icon class="text-pink-2" name="image" />
-                                <span class="text-pink-2"
+                                <q-icon name="image" />
+                                <span
                                   >暂无&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span
                                 >
                               </div>
                             </q-btn>
                             <q-btn class="col" flat color="cyan">
                               <div class="q-gutter-x-xs">
-                                <q-icon class="text-pink-2" name="add" />
-                                <span class="text-pink-2"
+                                <q-icon name="add" />
+                                <span
                                   >暂无&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span
                                 >
                               </div>
@@ -214,6 +218,7 @@ export default {
   },
   data() {
     return {
+      is_night_mode: false,
       show_workbench: false,
       tab: "main", //当前控制台页面
       main: {
@@ -331,15 +336,43 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
+$transition = var(--change-transition-time);
+normal_background =
+  transition: $transition;
+  background-color: var(--main-color-1);
+  color: var(--font-color-light);
+
 .workbench {
   $full_width = 260;
   width: $full_width px;
   overflow: hidden;
 
+  &>.header, .express-btn {
+    {normal_background};
+  }
+
+  .card-wrap {
+    ::v-deep .q-btn__content {
+      .q-icon, span {
+        color: var(--font-color-light);
+        transition: $transition;
+      }
+    }
+  }
+
+  .first-card {
+    {normal_background};
+    background-color: var(--main-color-2);
+  }
+
+  .second-card {
+    {normal_background};
+    background-color: var(--main-color-3);
+  }
+
   .container {
     transition: 0.3s;
     overflow: hidden;
-    background-color: white;
 
     .card-wrap {
       $row_height = 110;
@@ -347,6 +380,8 @@ export default {
       display: flex;
       flex-direction: column;
       padding: 0 10px;
+      background-color: var(--default-background-color);
+      transition: $transition;
 
       &>.row {
         height: $row_height px;

@@ -6,17 +6,22 @@
 
 <script>
 import { mapMutations } from "vuex";
+import { listenDrakMode,unListenDrakMode } from "@/util/theme.js";
 export default {
   name: "App",
   methods: {
     ...mapMutations("moduleNav", ["INIT_NAV"]),
-    ...mapMutations("moduleStyle", ["init_style"]),
+    ...mapMutations("moduleStyle", ["INIT_STYLE"]),
     ...mapMutations("moduleExpress", ["INIT_TRACKING_INFO"]),
   },
   mounted() {
     this.INIT_NAV(); //初始化导航
-    this.init_style(); //初始化主页样式
+    this.INIT_STYLE(); //初始化主页样式
     this.INIT_TRACKING_INFO(); //初始化快递单号信息
+    listenDrakMode();
+  },
+  destoryed() {
+    unListenDrakMode();
   },
 };
 </script>

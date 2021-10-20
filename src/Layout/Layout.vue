@@ -11,7 +11,12 @@
       </q-page>
     </q-page-container>
     <q-page-sticky position="top-left" :offset="[18, 18]">
-      <q-btn round color="accent" icon="card_travel" @click="show_workbrench" />
+      <q-btn
+        round
+        class="workbrench-btn"
+        icon="card_travel"
+        @click="show_workbrench"
+      />
     </q-page-sticky>
   </q-layout>
 </template>
@@ -19,8 +24,7 @@
 <script>
 export default {
   name: "Layout",
-  components: {
-  },
+  components: {},
   data() {
     return {
       drawerLeft: false,
@@ -34,3 +38,10 @@ export default {
   },
 };
 </script>
+<style lang="stylus" scoped>
+.workbrench-btn {
+  background-color: var(--main-color-1);
+  color: var(--font-color-light);
+  transition: var(--change-transition-time);
+}
+</style>
